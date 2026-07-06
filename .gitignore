@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+bot.log
+web_ui/server.log
+venv/
+data/balances.json
+data/inventory.json

@@ -1,0 +1,6 @@
+{
+  "sword": {"name": "Espada de madera", "price": 100},
+  "shield": {"name": "Escudo de hierro", "price": 150},
+  "potion": {"name": "Poción de vida", "price": 50},
+  "ring": {"name": "Anillo de poder", "price": 300}
+}
