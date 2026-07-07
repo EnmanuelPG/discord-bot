@@ -15,6 +15,7 @@ async def on_ready():
     try:
         if config.GUILD_ID:
             guild = discord.Object(id=int(config.GUILD_ID))
+            bot.tree.copy_global_to(guild=guild)
             synced = await bot.tree.sync(guild=guild)
             print(f"Comandos sincronizados al servidor {config.GUILD_ID}: {len(synced)}")
         else:
