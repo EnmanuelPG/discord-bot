@@ -14,6 +14,7 @@ YDL_OPTIONS = {
     "format": "bestaudio/best",
     "noplaylist": True,
     "quiet": True,
+    "extractor_args": {"youtube": {"player_client": ["android"]}},
 }
 
 class MusicControls(discord.ui.View):
