@@ -221,19 +221,26 @@ class Music(commands.Cog):
             await channel.connect()
 
         self.text_channels[interaction.guild.id] = interaction.channel
-        await interaction.followup.send(f"Obteniendo {len(tracks)} canciones de la playlist...")
 
         added = 0
+        started = False
         for query in tracks[:50]:
             result = await self._search_youtube(query)
             if result:
                 self.get_queue(interaction.guild.id).append(result)
                 added += 1
+                if not started:
+                    started = True
+                    await interaction.followup.send(f"Obteniendo {len(tracks)} canciones...")
+                    await self.play_next(interaction.guild.id)
 
-        if not interaction.guild.voice_client.is_playing():
+        if added > 0 and not started:
             await self.play_next(interaction.guild.id)
-
-        await interaction.followup.send(f"Añadidas **{added}** canciones a la cola")
+        if added > 0:
+            msg = f"Añadidas **{added}** canciones a la cola"
+            if not started:
+                msg += "\n(no se pudo iniciar la reproducción)"
+            await interaction.followup.send(msg)
 
     @app_commands.command(name="skip", description="Saltar a la siguiente canción")
     async def skip(self, interaction: discord.Interaction):
