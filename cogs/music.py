@@ -4,22 +4,32 @@ from discord import app_commands
 import asyncio
 import yt_dlp
 import config
+from ytmusicapi import YTMusic
 
 FFMPEG_OPTIONS = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
     "options": "-vn -b:a 192k -ar 48000",
 }
 
-YDL_OPTIONS = {
+YDL_DOWNLOAD = {
     "format": "bestaudio[abr>=64]/bestaudio/best",
     "noplaylist": True,
     "quiet": True,
     "extractor_args": {"youtube": {"player_client": ["android"]}},
 }
 
+YDL_PLAY = {
+    "format": "bestaudio[abr>=64]/bestaudio/best",
+    "noplaylist": True,
+    "quiet": True,
+}
+
+ytmusic = YTMusic()
+INACTIVITY_TIMEOUT = 300
+
 COVER_COLOR = discord.Color.from_str("#5865F2")
 FOOTER_TEXT = "Made with ❤️"
-SOURCE_ICON = "https://cdn.discordapp.com/emojis/1064444444444444444.png"
+
 
 class QueueSelect(discord.ui.Select):
     def __init__(self, queue):
@@ -42,11 +52,10 @@ class QueueSelect(discord.ui.Select):
         else:
             await interaction.response.send_message("Queue is empty", ephemeral=True)
 
+
 class FeaturesSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Lyrics", description="Show lyrics for current song", emoji="📝"),
-            discord.SelectOption(label="Loop", description="Toggle loop mode", emoji="🔁"),
             discord.SelectOption(label="Shuffle", description="Shuffle the queue", emoji="🔀"),
             discord.SelectOption(label="Clear Queue", description="Clear all queued songs", emoji="🗑️"),
         ]
@@ -59,15 +68,7 @@ class FeaturesSelect(discord.ui.Select):
         choice = self.values[0]
         guild_id = interaction.guild.id
 
-        if choice == "Lyrics":
-            np = cog.now_playing.get(guild_id)
-            if np:
-                await interaction.response.send_message(f"Lyrics for **{np}** coming soon!", ephemeral=True)
-            else:
-                await interaction.response.send_message("Nothing playing", ephemeral=True)
-        elif choice == "Loop":
-            await interaction.response.send_message("Loop mode is not implemented yet", ephemeral=True)
-        elif choice == "Shuffle":
+        if choice == "Shuffle":
             queue = cog.queues.get(guild_id, [])
             if len(queue) > 1:
                 import random
@@ -79,6 +80,7 @@ class FeaturesSelect(discord.ui.Select):
         elif choice == "Clear Queue":
             cog.queues[guild_id] = []
             await interaction.response.send_message("🗑️ Queue cleared!", ephemeral=True)
+
 
 class NowPlayingView(discord.ui.View):
     def __init__(self, cog, guild_id):
@@ -95,68 +97,26 @@ class Music(commands.Cog):
         self.now_playing = {}
         self.previous_tracks = {}
         self.now_playing_views = {}
+        self.last_activity = {}
+        self.inactivity_tasks = {}
 
     def get_queue(self, guild_id):
         if guild_id not in self.queues:
             self.queues[guild_id] = []
         return self.queues[guild_id]
 
-    async def send_now_playing(self, guild_id):
-        guild = self.bot.get_guild(guild_id)
-        if not guild:
-            return
-        channel = self.text_channels.get(guild_id)
-        if not channel:
-            return
-
-        np_data = self.now_playing.get(guild_id)
-        embed = discord.Embed(color=COVER_COLOR)
-        embed.set_footer(text=FOOTER_TEXT)
-
-        queue = self.get_queue(guild_id)
-
-        if np_data:
-            embed.title = "🎵 Now Playing"
-            embed.description = f"**[{np_data.get('title', 'Unknown')}]({np_data.get('url', '')})**"
-            if np_data.get("channel"):
-                embed.add_field(name="Channel", value=np_data["channel"], inline=True)
-            if np_data.get("duration"):
-                embed.add_field(name="Duration", value=np_data["duration"], inline=True)
-            if np_data.get("thumbnail"):
-                embed.set_thumbnail(url=np_data["thumbnail"])
-        else:
-            embed.title = "No music playing"
-            embed.description = "Use `/play` to start listening"
-
-        if queue:
-            embed.add_field(
-                name=f"Queue ({len(queue)} tracks)",
-                value="\n".join(f"`{i+1}.` {s.get('title','?')[:50]}" for i, s in enumerate(queue[:5])),
-                inline=False
-            )
-
+    async def build_view(self, guild_id, queue):
         view = NowPlayingView(self, guild_id)
 
-        def make_queue_select(queue_list):
-            opts = []
-            if not queue_list:
-                opts.append(discord.SelectOption(label="No tracks", default=True))
-            else:
-                for i, s in enumerate(queue_list[:25]):
-                    title = s.get("title", "Unknown")[:80]
-                    opts.append(discord.SelectOption(label=f"{i+1}. {title}", value=str(i)))
-            return QueueSelect(queue_list)
+        view.add_item(discord.ui.Button(label="Latest Update", style=discord.ButtonStyle.link,
+                       url="https://github.com/EnmanuelPG/discord-bot", row=0))
+        view.add_item(discord.ui.Button(label="Support", style=discord.ButtonStyle.link,
+                       url="https://github.com/EnmanuelPG/discord-bot/issues", row=0))
+        view.add_item(discord.ui.Button(label="Premium", style=discord.ButtonStyle.link,
+                       url="https://github.com/EnmanuelPG/discord-bot", row=0))
+        view.add_item(discord.ui.Button(label="Send a review", style=discord.ButtonStyle.link,
+                       url="https://github.com/EnmanuelPG/discord-bot/issues", row=0))
 
-        def make_features_select():
-            return FeaturesSelect()
-
-        view.clear_items()
-        # Row 0: links
-        view.add_item(discord.ui.Button(label="Latest Update", style=discord.ButtonStyle.link, url="https://github.com/EnmanuelPG/discord-bot", row=0))
-        view.add_item(discord.ui.Button(label="Support", style=discord.ButtonStyle.link, url="https://github.com/EnmanuelPG/discord-bot/issues", row=0))
-        view.add_item(discord.ui.Button(label="Premium", style=discord.ButtonStyle.link, url="https://github.com/EnmanuelPG/discord-bot", row=0))
-        view.add_item(discord.ui.Button(label="Send a review", style=discord.ButtonStyle.link, url="https://github.com/EnmanuelPG/discord-bot/issues", row=0))
-        # Row 1: controls
         prev_btn = discord.ui.Button(emoji="⏮️", style=discord.ButtonStyle.secondary, row=1)
         async def prev_cb(i): await self._prev_callback(i, guild_id)
         prev_btn.callback = prev_cb
@@ -177,18 +137,46 @@ class Music(commands.Cog):
         like_btn.callback = like_cb
         view.add_item(like_btn)
 
-        # Row 2: queue dropdown
-        qs = QueueSelect(queue)
-        view.add_item(qs)
+        view.add_item(QueueSelect(queue))
+        view.add_item(FeaturesSelect())
+        return view
 
-        # Row 3: features dropdown
-        fs = FeaturesSelect()
-        view.add_item(fs)
+    async def send_now_playing(self, guild_id):
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return
+        channel = self.text_channels.get(guild_id)
+        if not channel:
+            return
 
-        msg = None
-        if guild_id in self.now_playing_views:
+        np_data = self.now_playing.get(guild_id)
+        queue = self.get_queue(guild_id)
+
+        embed = discord.Embed(color=COVER_COLOR)
+        embed.set_footer(text=FOOTER_TEXT)
+
+        if np_data:
+            embed.title = "🎵 Now Playing"
+            embed.description = f"**[{np_data.get('title', 'Unknown')}]({np_data.get('url', '')})**"
+            if np_data.get("channel"):
+                embed.add_field(name="Channel", value=np_data["channel"], inline=True)
+            if np_data.get("duration"):
+                embed.add_field(name="Duration", value=np_data["duration"], inline=True)
+            if np_data.get("thumbnail"):
+                embed.set_thumbnail(url=np_data["thumbnail"])
+        else:
+            embed.title = "No music playing"
+            embed.description = "Use `/play` to start listening"
+
+        if queue:
+            lines = "\n".join(f"`{i+1}.` {s.get('title','?')[:50]}" for i, s in enumerate(queue[:8]))
+            embed.add_field(name=f"Queue ({len(queue)} tracks)", value=lines, inline=False)
+
+        view = await self.build_view(guild_id, queue)
+
+        msg = self.now_playing_views.get(guild_id)
+        if msg:
             try:
-                msg = self.now_playing_views[guild_id]
                 await msg.edit(embed=embed, view=view)
                 return
             except:
@@ -197,7 +185,7 @@ class Music(commands.Cog):
         msg = await channel.send(embed=embed, view=view)
         self.now_playing_views[guild_id] = msg
 
-    async def _prev_callback(self, interaction: discord.Interaction, guild_id):
+    async def _prev_callback(self, interaction, guild_id):
         prev = self.previous_tracks.get(guild_id, [])
         if prev:
             song = prev.pop()
@@ -211,7 +199,7 @@ class Music(commands.Cog):
         else:
             await interaction.response.send_message("⏮️ No previous track", ephemeral=True)
 
-    async def _pause_callback(self, interaction: discord.Interaction, btn):
+    async def _pause_callback(self, interaction, btn):
         vc = interaction.guild.voice_client
         if vc and vc.is_playing():
             vc.pause()
@@ -219,12 +207,13 @@ class Music(commands.Cog):
             await interaction.response.edit_message(view=btn.view)
         elif vc and vc.is_paused():
             vc.resume()
+            self.last_activity[interaction.guild.id] = asyncio.get_event_loop().time()
             btn.emoji = "⏸️"
             await interaction.response.edit_message(view=btn.view)
         else:
             await interaction.response.send_message("Nothing playing", ephemeral=True)
 
-    async def _skip_callback(self, interaction: discord.Interaction, guild_id):
+    async def _skip_callback(self, interaction, guild_id):
         vc = interaction.guild.voice_client
         if vc and vc.is_playing():
             np_data = self.now_playing.get(guild_id, {})
@@ -235,7 +224,7 @@ class Music(commands.Cog):
         else:
             await interaction.response.send_message("Nothing playing", ephemeral=True)
 
-    async def _like_callback(self, interaction: discord.Interaction, btn):
+    async def _like_callback(self, interaction, btn):
         liked = getattr(btn, "_liked", False)
         btn._liked = not liked
         btn.style = discord.ButtonStyle.danger if btn._liked else discord.ButtonStyle.secondary
@@ -245,6 +234,7 @@ class Music(commands.Cog):
         queue = self.get_queue(guild_id)
         if not queue:
             self.now_playing[guild_id] = None
+            self.last_activity[guild_id] = asyncio.get_event_loop().time()
             await self.send_now_playing(guild_id)
             return
         song = queue.pop(0)
@@ -264,7 +254,7 @@ class Music(commands.Cog):
 
         loop = asyncio.get_event_loop()
         try:
-            data = await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(YDL_OPTIONS).extract_info(url, download=False))
+            data = await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(YDL_DOWNLOAD).extract_info(url, download=False))
         except Exception as e:
             if channel:
                 await channel.send(f"Error: {e}")
@@ -286,6 +276,7 @@ class Music(commands.Cog):
             "thumbnail": thumb,
         }
         self.now_playing[guild_id] = np_data
+        self.last_activity[guild_id] = asyncio.get_event_loop().time()
 
         source = await discord.FFmpegOpusAudio.from_probe(audio_url, **FFMPEG_OPTIONS)
         voice.play(source, after=lambda e, gid=guild_id: asyncio.run_coroutine_threadsafe(
@@ -295,23 +286,25 @@ class Music(commands.Cog):
         await self.send_now_playing(guild_id)
 
     async def _search_youtube(self, query):
-        loop = asyncio.get_event_loop()
         try:
-            data = await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL({
-                **YDL_OPTIONS, "default_search": "ytsearch", "max_results": 1
-            }).extract_info(f"ytsearch:{query}", download=False))
-            entries = data.get("entries", [])
-            if not entries:
+            results = ytmusic.search(query, filter="songs", limit=1)
+            if not results:
                 return None
-            video = entries[0]
+            r = results[0]
+            video_id = r.get("videoId")
+            if not video_id:
+                return None
+            url = f"https://www.youtube.com/watch?v={video_id}"
+            artists = " & ".join(a["name"] for a in r.get("artists", []))
             return {
-                "url": video["webpage_url"],
-                "title": video["title"],
-                "channel": video.get("channel", ""),
-                "duration": video.get("duration", 0),
-                "thumbnail": video.get("thumbnail", None),
+                "url": url,
+                "title": r.get("title", "Unknown"),
+                "channel": artists,
+                "duration": r.get("duration", ""),
+                "thumbnail": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
             }
-        except:
+        except Exception as e:
+            print(f"Search error: {e}")
             return None
 
     async def _get_spotify_tracks(self, url):
@@ -322,11 +315,11 @@ class Music(commands.Cog):
             items = info.get("data", {}).get("playlistV2", {}).get("content", {}).get("items", [])
             tracks = []
             for item in items:
-                track_data = item.get("itemV2", {}).get("data", {})
-                name = track_data.get("name", "")
+                td = item.get("itemV2", {}).get("data", {})
+                name = td.get("name", "")
                 artists = " ".join(
                     a.get("profile", {}).get("name", "")
-                    for a in track_data.get("artists", {}).get("items", [])
+                    for a in td.get("artists", {}).get("items", [])
                 )
                 if name:
                     tracks.append(f"{name} {artists}".strip())
@@ -334,6 +327,58 @@ class Music(commands.Cog):
         except Exception as e:
             print(f"Spotify error: {e}")
             return None
+
+    async def _start_inactivity_timer(self, guild_id):
+        if guild_id in self.inactivity_tasks:
+            self.inactivity_tasks[guild_id].cancel()
+
+        async def timer():
+            try:
+                while True:
+                    await asyncio.sleep(60)
+                    last = self.last_activity.get(guild_id, 0)
+                    if last and (asyncio.get_event_loop().time() - last) >= INACTIVITY_TIMEOUT:
+                        guild = self.bot.get_guild(guild_id)
+                        if guild and guild.voice_client:
+                            vc = guild.voice_client
+                            if not vc.is_playing() and not vc.is_paused():
+                                self.queues[guild_id] = []
+                                await vc.disconnect()
+                                if guild_id in self.now_playing_views:
+                                    try:
+                                        await self.now_playing_views[guild_id].delete()
+                                    except:
+                                        pass
+                                    del self.now_playing_views[guild_id]
+                        break
+            except asyncio.CancelledError:
+                pass
+
+        self.inactivity_tasks[guild_id] = asyncio.create_task(timer())
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if member.bot:
+            return
+        guild = member.guild
+        if not guild.voice_client:
+            return
+        if guild.voice_client.channel is None:
+            return
+
+        bot_channel = guild.voice_client.channel
+        members = [m for m in bot_channel.members if not m.bot]
+
+        if len(members) == 0:
+            self.queues[guild.id] = []
+            self.now_playing[guild.id] = None
+            await guild.voice_client.disconnect()
+            if guild.id in self.now_playing_views:
+                try:
+                    await self.now_playing_views[guild.id].delete()
+                except:
+                    pass
+                del self.now_playing_views[guild.id]
 
     @app_commands.command(name="play", description="Reproducir una canción desde YouTube")
     @app_commands.describe(query="Nombre de la canción o URL de YouTube")
@@ -360,7 +405,7 @@ class Music(commands.Cog):
             if not interaction.guild.voice_client.is_playing():
                 await self.play_next(interaction.guild.id)
             else:
-                await interaction.followup.send(f"Added to queue")
+                await interaction.followup.send("Added to queue")
         else:
             result = await self._search_youtube(query)
             if not result:
@@ -383,10 +428,10 @@ class Music(commands.Cog):
 
         tracks = await self._get_spotify_tracks(url)
         if tracks is None:
-            await interaction.followup.send("Error al obtener la playlist. Verifica la URL e inténtalo de nuevo.")
+            await interaction.followup.send("Error al obtener la playlist")
             return
         if not tracks:
-            await interaction.followup.send("La playlist está vacía o no se encontraron canciones")
+            await interaction.followup.send("La playlist está vacía")
             return
 
         channel = interaction.user.voice.channel
@@ -477,9 +522,11 @@ class Music(commands.Cog):
         voice = interaction.guild.voice_client
         if voice and voice.is_paused():
             voice.resume()
+            self.last_activity[interaction.guild.id] = asyncio.get_event_loop().time()
             await interaction.response.send_message("▶️ Reanudado")
         else:
             await interaction.response.send_message("No hay nada pausado")
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

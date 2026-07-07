@@ -3,6 +3,7 @@ python-dotenv
 aiohttp
 yt-dlp
 google-genai
+ytmusicapi
 spotapi
 pymongo
 redis
