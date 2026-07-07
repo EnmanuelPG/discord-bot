@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 import yt_dlp
-import re
 import config
 
 FFMPEG_OPTIONS = {
@@ -140,24 +139,21 @@ class Music(commands.Cog):
             return None
 
     async def _get_spotify_tracks(self, url):
-        if not config.SPOTIFY_CLIENT_ID or not config.SPOTIFY_CLIENT_SECRET:
-            return None
-        import spotipy
-        from spotipy.oauth2 import SpotifyClientCredentials
         try:
-            sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-                client_id=config.SPOTIFY_CLIENT_ID,
-                client_secret=config.SPOTIFY_CLIENT_SECRET
-            ))
-            playlist_id = re.search(r'playlist/([a-zA-Z0-9]+)', url)
-            if not playlist_id:
-                return None
-            results = sp.playlist(playlist_id.group(1))
+            from spotapi import PublicPlaylist
+            pl = PublicPlaylist(url)
+            info = pl.get_playlist_info()
+            items = info.get('data', {}).get('playlistV2', {}).get('content', {}).get('items', [])
             tracks = []
-            for item in results['tracks']['items']:
-                track = item['track']
-                if track:
-                    tracks.append(f"{track['name']} {track['artists'][0]['name']}")
+            for item in items:
+                track_data = item.get('itemV2', {}).get('data', {})
+                name = track_data.get('name', '')
+                artists = ' '.join(
+                    a.get('profile', {}).get('name', '')
+                    for a in track_data.get('artists', {}).get('items', [])
+                )
+                if name:
+                    tracks.append(f"{name} {artists}".strip())
             return tracks
         except Exception as e:
             print(f"Spotify error: {e}")
@@ -208,14 +204,6 @@ class Music(commands.Cog):
             return
 
         await interaction.response.defer()
-
-        if not config.SPOTIFY_CLIENT_ID or not config.SPOTIFY_CLIENT_SECRET:
-            await interaction.followup.send(
-                "Spotify no está configurado. Consigue credenciales en "
-                "https://developer.spotify.com/dashboard y agrega SPOTIFY_CLIENT_ID "
-                "y SPOTIFY_CLIENT_SECRET al .env o variables de Railway"
-            )
-            return
 
         tracks = await self._get_spotify_tracks(url)
         if tracks is None:
