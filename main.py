@@ -38,7 +38,6 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
 
 async def main():
     async with bot:
-        await bot.load_extension("cogs.economy")
         await bot.load_extension("cogs.music")
         await bot.load_extension("cogs.ai_chat")
         await bot.start(config.DISCORD_TOKEN)
