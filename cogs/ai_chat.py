@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from google import genai
 import aiohttp
+import urllib.parse
 import config
 
 client = genai.Client(api_key=config.GEMINI_API_KEY)
@@ -55,7 +56,7 @@ class AIChat(commands.Cog):
     async def imagine(self, interaction: discord.Interaction, descripcion: str):
         await interaction.response.defer()
 
-        url = f"https://image.pollinations.ai/prompt/{descripcion}"
+        url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(descripcion)}"
         embed = discord.Embed(
             title="🎨 Imagen generada",
             description=f"**{descripcion}**",
