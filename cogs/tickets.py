@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import re
 
-PEDIDOS_CHANNEL_ID = 1524947179771265106
+PEDIDOS_CHANNEL_ID = 1524947903775375551
 DEVELOPER_ROLE_ID = 1525311162499993730
 TICKETS_CATEGORY_NAME = "TICKETS"
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV"
@@ -66,19 +66,19 @@ async def create_ticket_channel(guild, ticket_id, embed, username):
             f"📦 **{embed.title if embed.title else 'Pedido'}**\n\n"
             f"🎯 ¡Bienvenido! Gracias por confiar en **ZentroxDev**.\n\n"
             f"Tu solicitud ha sido recibida correctamente. Un administrador "
-            f"revisara los detalles y te atiende a la brevedad.\n\n"
+            f"revisará los detalles y te atenderá a la brevedad.\n\n"
             f"📌 **Mientras tanto:**\n"
-            f"▸ Puedes ir explicando tu pedido con mas detalle aqui.\n"
-            f"▸ Si tienes archivos de referencia, adjuntalos en este canal.\n"
-            f"▸ Un miembro del equipo te respondera pronto."
+            f"▸ Puedes ir explicando tu pedido con más detalle aquí.\n"
+            f"▸ Si tienes archivos de referencia, adjúntalos en este canal.\n"
+            f"▸ Un miembro del equipo te responderá pronto."
         ),
         color=0x3b82f6,
         timestamp=discord.utils.utcnow()
     )
-    welcome_embed.set_footer(text="ZentroxDev · Ticket automatico")
+    welcome_embed.set_footer(text="ZentroxDev · Ticket automático")
 
     member_mention = member.mention if member else "*(usuario no encontrado)*"
-    welcome_text = f"{member_mention}\n\n**Bienvenido a tu ticket!**"
+    welcome_text = f"{member_mention}\n━━━━━━━━━━━━━━━━━━━━━━━━\n**🎟️ Bienvenido a tu ticket — ZentroxDev**"
     await ticket_channel.send(content=welcome_text, embed=welcome_embed)
     return ticket_channel, True
 
@@ -95,7 +95,7 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
             f"📦 **{service_name}**\n\n"
             f"🎯 Bienvenido y gracias por confiar en **ZentroxDev**.\n"
             f"Hemos recibido tu solicitud y uno de nuestros administradores "
-            f"la revisara en breve."
+            f"la revisará en breve."
         ),
         color=0x3b82f6,
         timestamp=discord.utils.utcnow()
@@ -109,18 +109,26 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
         f"**Pago:** {metodo}\n"
         f"**Discord:** {usuario}"
     )
-    embed.add_field(name="📋 Informacion del pedido", value=info, inline=False)
+    embed.add_field(name="📋 Información del pedido", value=info, inline=False)
 
     pasos = (
-        "▸ Un miembro del equipo revisara tu solicitud.\n"
-        "▸ Recibiras una respuesta por Discord en maximo 24 horas habiles.\n"
-        "▸ Es posible que te solicitemos informacion adicional.\n"
-        "▸ No cierres este ticket hasta que tu pedido este finalizado."
+        "▸ Un miembro del equipo revisará tu solicitud.\n"
+        "▸ Recibirás una respuesta por Discord en máximo 24 horas hábiles.\n"
+        "▸ Es posible que te solicitemos información adicional.\n"
+        "▸ No cierres este ticket hasta que tu pedido esté finalizado."
     )
-    embed.add_field(name="📌 Proximos pasos", value=pasos, inline=False)
+    embed.add_field(name="📌 Próximos pasos", value=pasos, inline=False)
+
+    gracias = (
+        "💙 **Gracias por tu preferencia**\n"
+        "*\"Ideas que construyen soluciones\"*\n\n"
+        "El equipo de ZentroxDev se pondrá en contacto contigo pronto. "
+        "Si tienes alguna urgencia, responde a este mensaje."
+    )
+    embed.add_field(name="\u200b", value=gracias, inline=False)
 
     embed.set_footer(
-        text="ZentroxDev © 2026 · Los administradores te contactaran pronto",
+        text="ZentroxDev © 2026 · Los administradores te contactarán pronto",
         icon_url=bot_user.display_avatar.url if bot_user else None
     )
 
