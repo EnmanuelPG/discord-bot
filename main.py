@@ -61,89 +61,79 @@ async def handle_verify_user(request):
         data = await request.json()
         username = data.get("username", "").strip()
     except:
-        return web.json_response({"exists": False, "error": "Invalid JSON"}, status=400)
+        return cors_response(web.json_response({"exists": False, "error": "Invalid JSON"}, status=400))
     if not username:
-        return web.json_response({"exists": False, "error": "Username required"}, status=400)
+        return cors_response(web.json_response({"exists": False, "error": "Username required"}, status=400))
     guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
     if not guild:
-        return web.json_response({"exists": False, "error": "Guild not found"}, status=500)
+        return cors_response(web.json_response({"exists": False, "error": "Guild not found"}, status=500))
     try: await guild.chunk()
     except: pass
     member = await find_member(guild, username)
-    return web.json_response({
+    return cors_response(web.json_response({
         "exists": member is not None,
         "username": member.name if member else None,
         "display_name": member.display_name if member else None,
         "id": str(member.id) if member else None,
-    })
+    }))
 
 async def handle_create_order(request):
     from cogs.tickets import create_ticket_channel
     try:
         data = await request.json()
     except:
-        return web.json_response({"ok": False, "error": "Invalid JSON"}, status=400)
+        return cors_response(web.json_response({"ok": False, "error": "Invalid JSON"}, status=400))
     ticket_id = data.get("ticket_id", "").strip()
     service_name = data.get("service_name", "").strip()
     detalle = data.get("detalle", "").strip()
     metodo = data.get("metodo", "").strip()
     usuario = data.get("usuario", "").strip()
     if not all([ticket_id, service_name, usuario]):
-        return web.json_response({"ok": False, "error": "Missing required fields"}, status=400)
+        return cors_response(web.json_response({"ok": False, "error": "Missing required fields"}, status=400))
     guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
     if not guild:
-        return web.json_response({"ok": False, "error": "Guild not found"}, status=500)
+        return cors_response(web.json_response({"ok": False, "error": "Guild not found"}, status=500))
     try: await guild.chunk()
     except: pass
     member = await find_member(guild, usuario)
     if not member:
-        return web.json_response({
+        return cors_response(web.json_response({
             "ok": False, "error": "USER_NOT_FOUND",
             "message": f"El usuario '{usuario}' no está en el servidor de Discord."
-        }, status=400)
+        }, status=400))
     dummy_embed = discord.Embed(title=f"📦 {service_name}")
     ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, usuario)
     if not created:
-        return web.json_response({
+        return cors_response(web.json_response({
             "ok": True, "channel_id": str(ticket_channel.id),
             "channel_mention": ticket_channel.mention,
             "channel_url": ticket_channel.jump_url,
             "message": f"El canal {ticket_channel.mention} ya existía.",
-        })
+        }))
     from cogs.tickets import send_embed_to_pedidos
     await send_embed_to_pedidos(guild, bot.user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel)
-    return web.json_response({
+    return cors_response(web.json_response({
         "ok": True, "channel_id": str(ticket_channel.id),
         "channel_mention": ticket_channel.mention,
         "channel_url": ticket_channel.jump_url,
         "message": f"✅ Ticket {ticket_id} creado → {ticket_channel.mention}",
-    })
+    }))
+
+async def handle_root(request):
+    return web.json_response({"status": "ok", "bot": "running"})
+
+def cors_response(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
 
 async def handle_options(request):
-    return web.Response(headers={"Allow": "POST, OPTIONS"})
+    return cors_response(web.Response())
 
 async def init_http_server():
     app = web.Application()
-    cors_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-    }
-    async def cors_middleware(app, handler):
-        async def middleware(request):
-            if request.method == "OPTIONS":
-                return web.Response(headers=cors_headers)
-            try:
-                response = await handler(request)
-                for key, value in cors_headers.items():
-                    response.headers[key] = value
-                return response
-            except web.HTTPException as e:
-                for key, value in cors_headers.items():
-                    e.headers[key] = value
-                raise
-        return middleware
-    app.middlewares.append(cors_middleware)
+    app.router.add_get("/", handle_root)
     app.router.add_post("/api/verify-user", handle_verify_user)
     app.router.add_post("/api/order", handle_create_order)
     app.router.add_route("OPTIONS", "/api/verify-user", handle_options)
@@ -159,10 +149,16 @@ async def init_http_server():
 async def main():
     http_runner = await init_http_server()
     async with bot:
-        await bot.load_extension("cogs.music")
-        await bot.load_extension("cogs.ai_chat")
-        await bot.load_extension("cogs.tickets")
-        await bot.start(config.DISCORD_TOKEN)
+        try:
+            await bot.load_extension("cogs.music")
+            await bot.load_extension("cogs.ai_chat")
+            await bot.load_extension("cogs.tickets")
+        except Exception as e:
+            print(f"Error loading cogs: {e}")
+        try:
+            await bot.start(config.DISCORD_TOKEN)
+        except Exception as e:
+            print(f"Error starting bot: {e}")
     await http_runner.cleanup()
 
 if __name__ == "__main__":
