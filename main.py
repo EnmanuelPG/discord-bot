@@ -146,20 +146,30 @@ async def init_http_server():
     print(f"HTTP server running on port {port}")
     return runner
 
+async def run_bot():
+    for cog in ("cogs.music", "cogs.ai_chat", "cogs.tickets"):
+        try:
+            await bot.load_extension(cog)
+        except Exception as e:
+            print(f"Error loading {e}: {e}")
+    try:
+        await bot.start(config.DISCORD_TOKEN)
+    except Exception as e:
+        print(f"Bot error (HTTP server keeps running): {e}")
+
 async def main():
     http_runner = await init_http_server()
-    async with bot:
+    bot_task = asyncio.create_task(run_bot())
+    try:
+        await asyncio.Event().wait()
+    except (KeyboardInterrupt, asyncio.CancelledError):
         try:
-            await bot.load_extension("cogs.music")
-            await bot.load_extension("cogs.ai_chat")
-            await bot.load_extension("cogs.tickets")
-        except Exception as e:
-            print(f"Error loading cogs: {e}")
-        try:
-            await bot.start(config.DISCORD_TOKEN)
-        except Exception as e:
-            print(f"Error starting bot: {e}")
-    await http_runner.cleanup()
+            await bot.close()
+        except Exception:
+            pass
+        bot_task.cancel()
+    finally:
+        await http_runner.cleanup()
 
 if __name__ == "__main__":
     import asyncio
