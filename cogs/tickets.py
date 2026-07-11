@@ -1,11 +1,36 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
+import asyncio
 import re
 
 PEDIDOS_CHANNEL_ID = 1524947903775375551
 DEVELOPER_ROLE_ID = 1525311162499993730
 TICKETS_CATEGORY_NAME = "TICKETS"
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV"
+
+
+class TicketCloseView(discord.ui.View):
+    def __init__(self, creator_id: int):
+        super().__init__(timeout=None)
+        self.creator_id = creator_id
+
+    @discord.ui.button(label="🔒 Cerrar ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket")
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        member = interaction.user
+        has_role = any(role.id == DEVELOPER_ROLE_ID for role in member.roles)
+        is_creator = member.id == self.creator_id
+        if not has_role and not is_creator:
+            await interaction.response.send_message(
+                "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
+            )
+            return
+        await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
+        await asyncio.sleep(5)
+        try:
+            await interaction.channel.delete(reason=f"Ticket cerrado por {member.name} ({member.id})")
+        except Exception:
+            pass
 
 
 async def find_member_in_guild(guild, discord_username):
@@ -57,6 +82,7 @@ async def create_ticket_channel(guild, ticket_id, embed, username):
         channel_name,
         category=category,
         overwrites=overwrites,
+        topic=f"creator:{member.id}" if member else "creator:0",
         reason=f"Ticket {ticket_id} creado automaticamente"
     )
 
@@ -79,7 +105,8 @@ async def create_ticket_channel(guild, ticket_id, embed, username):
 
     member_mention = member.mention if member else "*(usuario no encontrado)*"
     welcome_text = f"{member_mention}\n━━━━━━━━━━━━━━━━━━━━━━━━\n**🎟️ Bienvenido a tu ticket — ZentroxDev**"
-    await ticket_channel.send(content=welcome_text, embed=welcome_embed)
+    view = TicketCloseView(creator_id=member.id if member else 0)
+    await ticket_channel.send(content=welcome_text, embed=welcome_embed, view=view)
     return ticket_channel, True
 
 
@@ -140,6 +167,25 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @app_commands.command(name="close", description="Cierra el ticket actual (solo admins o creador)")
+    async def close(self, interaction: discord.Interaction):
+        has_role = any(role.id == DEVELOPER_ROLE_ID for role in interaction.user.roles)
+        creator_id = 0
+        if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
+            try:
+                creator_id = int(interaction.channel.topic.split(":", 1)[1])
+            except ValueError:
+                pass
+        if not has_role and interaction.user.id != creator_id:
+            await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
+            return
+        await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}")
+        await asyncio.sleep(5)
+        try:
+            await interaction.channel.delete(reason=f"Ticket cerrado por {interaction.user.name} ({interaction.user.id})")
+        except Exception:
+            pass
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id != PEDIDOS_CHANNEL_ID:
@@ -158,7 +204,7 @@ class Tickets(commands.Cog):
         service_name = None
 
         for field in embed.fields:
-            if "Informacion del pedido" in field.name or "Informacion del pedido" in field.name:
+            if "Información del pedido" in field.name or "Informacion del pedido" in field.name:
                 value = field.value
                 ticket_match = re.search(r'Ticket:\s*(\S+)', value)
                 if ticket_match:
