@@ -67,8 +67,6 @@ async def handle_verify_user(request):
     guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
     if not guild:
         return cors_response(web.json_response({"exists": False, "error": "Guild not found"}, status=500))
-    try: await guild.chunk()
-    except: pass
     member = await find_member(guild, username)
     return cors_response(web.json_response({
         "exists": member is not None,
@@ -93,8 +91,6 @@ async def handle_create_order(request):
     guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
     if not guild:
         return cors_response(web.json_response({"ok": False, "error": "Guild not found"}, status=500))
-    try: await guild.chunk()
-    except: pass
     member = await find_member(guild, usuario)
     if not member:
         return cors_response(web.json_response({
