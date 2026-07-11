@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 import config
 from aiohttp import web
+from cogs.tickets import PEDIDOS_CHANNEL_ID
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -12,6 +13,18 @@ intents.members = True
 
 bot = commands.Bot(command_prefix=None, intents=intents)
 GUILD_ID = int(config.GUILD_ID) if config.GUILD_ID else None
+
+async def get_target_guild():
+    if GUILD_ID:
+        guild = bot.get_guild(GUILD_ID)
+        if guild:
+            return guild
+    channel = bot.get_channel(PEDIDOS_CHANNEL_ID)
+    if channel and channel.guild:
+        return channel.guild
+    for g in bot.guilds:
+        return g
+    return None
 
 @bot.event
 async def on_ready():
@@ -64,7 +77,7 @@ async def handle_verify_user(request):
         return cors_response(web.json_response({"exists": False, "error": "Invalid JSON"}, status=400))
     if not username:
         return cors_response(web.json_response({"exists": False, "error": "Username required"}, status=400))
-    guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
+    guild = await get_target_guild()
     if not guild:
         return cors_response(web.json_response({"exists": False, "error": "Guild not found"}, status=500))
     member = await find_member(guild, username)
@@ -88,7 +101,7 @@ async def handle_create_order(request):
     usuario = data.get("usuario", "").strip()
     if not all([ticket_id, service_name, usuario]):
         return cors_response(web.json_response({"ok": False, "error": "Missing required fields"}, status=400))
-    guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
+    guild = await get_target_guild()
     if not guild:
         return cors_response(web.json_response({"ok": False, "error": "Guild not found"}, status=500))
     member = await find_member(guild, usuario)
