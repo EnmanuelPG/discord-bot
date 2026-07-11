@@ -716,6 +716,7 @@
 <script>
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV";
 const DISCORD_INVITE = "https://discord.gg/wsgxZbscBb";
+const BOT_API_URL = "https://worker-production-5166.up.railway.app";
 
 const serviceThumbnails = {
   bots: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f916.png',
@@ -763,60 +764,29 @@ function generateTicketId(){return 'ZDX-'+Math.floor(1000+Math.random()*9000);}
 function getServiceKey(n){for(const[k,s]of Object.entries(services)){if(s.name===n)return k;}return 'bots';}
 
 async function sendTicketToDiscord(ticketId,service,answersList){
-  if(!DISCORD_WEBHOOK_URL) return {ok:false,reason:'not_configured'};
-  const thumb=serviceThumbnails[getServiceKey(service.name)];
   const detalle=answersList[0]||'—';
   const metodo=answersList[1]||'—';
   const usuario=answersList[2]||'—';
 
-  const payload={
-    username:'ZentroxDev · Sistema de pedidos',
-    avatar_url:'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ab.png',
-    embeds:[{
-      color:0x3b82f6,
-      thumbnail:{url:thumb},
-      author:{
-        name:'✨ Nuevo pedido recibido',
-        icon_url:'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/2728.png'
-      },
-      title:'📦 '+service.name,
-      url:DISCORD_INVITE,
-      description:'🎯 **Bienvenido y gracias por confiar en ZentroxDev.**\nHemos recibido tu solicitud y uno de nuestros administradores la revisará en breve.\n━━━━━━━━━━━━━━━━━━━━━━━━',
-      fields:[
-        {
-          name:'📋 Información del pedido',
-          value:'```\nTicket: '+ticketId+'\nServicio: '+service.name+'\n━━━━━━━━━━━━━━━━━━━\nDetalle: '+detalle+'\nPago: '+metodo+'\nDiscord: '+usuario+'```',
-          inline:false
-        },
-        {
-          name:'📌 Próximos pasos',
-          value:':black_small_square: Un miembro del equipo revisará tu solicitud.\n:black_small_square: Recibirás una respuesta por Discord en máximo **24 horas hábiles**.\n:black_small_square: Es posible que te solicitemos información adicional.\n:black_small_square: No cierres este ticket hasta que tu pedido esté finalizado.',
-          inline:false
-        },
-        {
-          name:'💙 Gracias por tu preferencia',
-          value:'> *"Ideas que construyen soluciones"*\nEl equipo de ZentroxDev se pondrá en contacto contigo pronto. Si tienes alguna urgencia, responde a este mensaje.',
-          inline:false
-        }
-      ],
-      footer:{
-        text:'ZentroxDev © 2026 · Los administradores te contactarán pronto',
-        icon_url:'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ab.png'
-      },
-      timestamp:new Date().toISOString()
-    }]
-  };
   try{
-    const res=await fetch(DISCORD_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(res.ok){
+    const res=await fetch(BOT_API_URL+'/api/order',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        ticket_id:ticketId, service_name:service.name,
+        detalle:detalle, metodo:metodo, usuario:usuario
+      })
+    });
+    const data=await res.json();
+    if(data.ok){
       try{
         const orders=JSON.parse(localStorage.getItem('zentrox_orders')||'[]');
         orders.push(Date.now());
         localStorage.setItem('zentrox_orders',JSON.stringify(orders));
       }catch(e){}
+      return {ok:true, channel_url:data.channel_url, channel_mention:data.channel_mention};
     }
-    return {ok:res.ok};
-  }catch(e){return {ok:false,reason:'network'};}
+    return {ok:false, error:data.error, message:data.message};
+  }catch(e){return {ok:false, error:'network', message:'No se pudo conectar con el servidor.'};}
 }
 
 function getOrderCount(){
@@ -878,18 +848,45 @@ function askNext(){
   setTimeout(()=>{typing.remove();addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},500);
 }
 
-function submitAnswer(){
+async function submitAnswer(){
   const input=document.getElementById('modalInput'),val=input.value.trim();
   if(!val)return;
   addBubble(val,'user');
-  const w=/discord/i.test(currentService.questions[currentStep]);
+  const isDiscordQuestion=/discord/i.test(currentService.questions[currentStep]);
   answers.push(val);input.value='';currentStep++;
   const goNext=()=>{
     if(currentStep<currentService.questions.length) setTimeout(askNext,350);
     else{updateDots();setTimeout(showFinal,500);}
   };
-  if(w&&/^(no|nop|nope|negativo)$/i.test(val.trim())){
-    setTimeout(()=>{addBubble('No hay problema, únete aquí y así podremos contactarte: '+DISCORD_INVITE,'bot');goNext();},450);
+  if(isDiscordQuestion){
+    if(/^(no|nop|nope|negativo)$/i.test(val.trim())){
+      setTimeout(()=>{addBubble('No hay problema, únete aquí y así podremos contactarte: '+DISCORD_INVITE,'bot');goNext();},450);
+      return;
+    }
+    const chat=document.getElementById('chatArea'),t=document.createElement('div');
+    t.className='typing';t.innerHTML='<span></span><span></span><span></span>';
+    chat.appendChild(t);chat.scrollTop=chat.scrollHeight;
+    try{
+      const r=await fetch(BOT_API_URL+'/api/verify-user',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:val})
+      });
+      const d=await r.json();
+      t.remove();
+      if(d.exists){
+        answers[answers.length-1]=d.username;
+        addBubble('✅ Verificado como **'+d.display_name+'**','bot');
+        goNext();
+      }else{
+        currentStep--;answers.pop();
+        addBubble('❌ No encontramos a **'+val+'** en el servidor. Únete a '+DISCORD_INVITE+' y escribe tu usuario exacto.','bot');
+        setTimeout(()=>{addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},600);
+      }
+    }catch(e){
+      t.remove();currentStep--;answers.pop();
+      addBubble('⚠️ Error de conexión. Intenta de nuevo.','bot');
+      setTimeout(()=>{addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},600);
+    }
   }else goNext();
 }
 
@@ -903,10 +900,18 @@ async function showFinal(){
   ticket+='Estado: Recibido';
   document.getElementById('ticketContent').textContent=ticket;
   const note=document.getElementById('successNote');
-  note.classList.add('show');note.style.color='var(--text-muted)';note.textContent='⏳ Enviando tu ticket...';
+  note.classList.add('show');note.style.color='var(--text-muted)';note.textContent='⏳ Creando tu ticket...';
   const r=await sendTicketToDiscord(currentTicketId,currentService,answers);
-  if(r.ok){note.style.color='var(--success)';note.textContent='✅ Ticket '+currentTicketId+' enviado. Un administrador te contactará por Discord.';}
-  else{note.style.color='#fbbf24';note.textContent='⚠️ No se pudo enviar automáticamente. Copia el pedido y envíalo por Discord.';}
+  if(r.ok){
+    note.style.color='var(--success)';
+    note.innerHTML='✅ <b>Ticket '+currentTicketId+'</b> creado.<br>📌 <a href="'+r.channel_url+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">'+r.channel_mention+'</a> — canal privado de tu pedido.';
+    const btn=document.querySelector('.final-actions .discord-btn');
+    if(btn){btn.href=r.channel_url;btn.textContent='Ir a mi ticket →';}
+  }else{
+    note.style.color='#fbbf24';
+    if(r.error==='USER_NOT_FOUND') note.innerHTML='⚠️ <b>No estás en el Discord.</b> Únete: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/wsgxZbscBb</a>';
+    else note.textContent='⚠️ Error al crear el ticket. Copia el pedido y envíalo por Discord.';
+  }
 }
 
 function copyTicket(){

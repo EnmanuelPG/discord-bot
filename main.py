@@ -1,7 +1,9 @@
+import os
 import discord
 from discord.ext import commands
 from discord import app_commands
 import config
+from aiohttp import web
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -9,6 +11,7 @@ intents.voice_states = True
 intents.members = True
 
 bot = commands.Bot(command_prefix=None, intents=intents)
+GUILD_ID = int(config.GUILD_ID) if config.GUILD_ID else None
 
 @bot.event
 async def on_ready():
@@ -36,12 +39,131 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     except:
         pass
 
+async def find_member(guild, username):
+    if not username:
+        return None
+    if username.isdigit() and len(username) == 18:
+        m = guild.get_member(int(username))
+        if m: return m
+    m = guild.get_member_named(username)
+    if m: return m
+    lower = username.lower().lstrip('@')
+    for m in guild.members:
+        if m.name.lower() == lower or m.display_name.lower() == lower:
+            return m
+    for m in guild.members:
+        if lower in m.name.lower() or lower in m.display_name.lower():
+            return m
+    return None
+
+async def handle_verify_user(request):
+    try:
+        data = await request.json()
+        username = data.get("username", "").strip()
+    except:
+        return web.json_response({"exists": False, "error": "Invalid JSON"}, status=400)
+    if not username:
+        return web.json_response({"exists": False, "error": "Username required"}, status=400)
+    guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
+    if not guild:
+        return web.json_response({"exists": False, "error": "Guild not found"}, status=500)
+    try: await guild.chunk()
+    except: pass
+    member = await find_member(guild, username)
+    return web.json_response({
+        "exists": member is not None,
+        "username": member.name if member else None,
+        "display_name": member.display_name if member else None,
+        "id": str(member.id) if member else None,
+    })
+
+async def handle_create_order(request):
+    from cogs.tickets import create_ticket_channel
+    try:
+        data = await request.json()
+    except:
+        return web.json_response({"ok": False, "error": "Invalid JSON"}, status=400)
+    ticket_id = data.get("ticket_id", "").strip()
+    service_name = data.get("service_name", "").strip()
+    detalle = data.get("detalle", "").strip()
+    metodo = data.get("metodo", "").strip()
+    usuario = data.get("usuario", "").strip()
+    if not all([ticket_id, service_name, usuario]):
+        return web.json_response({"ok": False, "error": "Missing required fields"}, status=400)
+    guild = bot.get_guild(GUILD_ID) if GUILD_ID else None
+    if not guild:
+        return web.json_response({"ok": False, "error": "Guild not found"}, status=500)
+    try: await guild.chunk()
+    except: pass
+    member = await find_member(guild, usuario)
+    if not member:
+        return web.json_response({
+            "ok": False, "error": "USER_NOT_FOUND",
+            "message": f"El usuario '{usuario}' no está en el servidor de Discord."
+        }, status=400)
+    dummy_embed = discord.Embed(title=f"📦 {service_name}")
+    ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, usuario)
+    if not created:
+        return web.json_response({
+            "ok": True, "channel_id": str(ticket_channel.id),
+            "channel_mention": ticket_channel.mention,
+            "channel_url": ticket_channel.jump_url,
+            "message": f"El canal {ticket_channel.mention} ya existía.",
+        })
+    from cogs.tickets import send_embed_to_pedidos
+    await send_embed_to_pedidos(guild, bot.user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel)
+    return web.json_response({
+        "ok": True, "channel_id": str(ticket_channel.id),
+        "channel_mention": ticket_channel.mention,
+        "channel_url": ticket_channel.jump_url,
+        "message": f"✅ Ticket {ticket_id} creado → {ticket_channel.mention}",
+    })
+
+async def handle_options(request):
+    return web.Response(headers={"Allow": "POST, OPTIONS"})
+
+async def init_http_server():
+    app = web.Application()
+    cors_headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    async def cors_middleware(app, handler):
+        async def middleware(request):
+            if request.method == "OPTIONS":
+                return web.Response(headers=cors_headers)
+            try:
+                response = await handler(request)
+                for key, value in cors_headers.items():
+                    response.headers[key] = value
+                return response
+            except web.HTTPException as e:
+                for key, value in cors_headers.items():
+                    e.headers[key] = value
+                raise
+        return middleware
+    app.middlewares.append(cors_middleware)
+    app.router.add_post("/api/verify-user", handle_verify_user)
+    app.router.add_post("/api/order", handle_create_order)
+    app.router.add_route("OPTIONS", "/api/verify-user", handle_options)
+    app.router.add_route("OPTIONS", "/api/order", handle_options)
+    port = int(os.environ.get("PORT", 8080))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"HTTP server running on port {port}")
+    return runner
+
 async def main():
+    http_runner = await init_http_server()
     async with bot:
         await bot.load_extension("cogs.music")
         await bot.load_extension("cogs.ai_chat")
         await bot.load_extension("cogs.tickets")
         await bot.start(config.DISCORD_TOKEN)
+    await http_runner.cleanup()
 
 if __name__ == "__main__":
     import asyncio
