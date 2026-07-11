@@ -1,4 +1,5 @@
 import os
+import asyncio
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -14,21 +15,31 @@ intents.members = True
 bot = commands.Bot(command_prefix=None, intents=intents)
 GUILD_ID = int(config.GUILD_ID) if config.GUILD_ID else None
 
+_target_guild = None
+_bot_ready = asyncio.Event()
+
 async def get_target_guild():
-    if GUILD_ID:
-        guild = bot.get_guild(GUILD_ID)
-        if guild:
-            return guild
-    channel = bot.get_channel(PEDIDOS_CHANNEL_ID)
-    if channel and channel.guild:
-        return channel.guild
-    for g in bot.guilds:
-        return g
-    return None
+    if _target_guild:
+        return _target_guild
+    try:
+        await asyncio.wait_for(_bot_ready.wait(), timeout=30)
+    except asyncio.TimeoutError:
+        return _target_guild
+    return _target_guild
 
 @bot.event
 async def on_ready():
+    global _target_guild
     print(f"Bot conectado como {bot.user}")
+    if GUILD_ID:
+        _target_guild = bot.get_guild(GUILD_ID)
+    if not _target_guild:
+        channel = bot.get_channel(PEDIDOS_CHANNEL_ID)
+        if channel and channel.guild:
+            _target_guild = channel.guild
+    if not _target_guild and bot.guilds:
+        _target_guild = bot.guilds[0]
+    _bot_ready.set()
     try:
         synced_global = await bot.tree.sync()
         print(f"Comandos globales sincronizados: {len(synced_global)}")
@@ -181,5 +192,4 @@ async def main():
         await http_runner.cleanup()
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
