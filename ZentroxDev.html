@@ -25,6 +25,8 @@
     --text-muted: #8890b5;
     --text-dim: #555c85;
     --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
     --radius: 16px;
     --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
     --gradient2: linear-gradient(135deg, #3b82f6, #60a5fa);
@@ -336,7 +338,6 @@
   .footer-social a:hover{background:var(--card-hover);border-color:var(--border-strong);}
   .copyright{width:100%;text-align:center;color:var(--text-dim);font-size:0.8rem;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);}
 
-  /* modal */
   .modal-overlay{
     position:fixed;inset:0;
     background:rgba(2,3,10,0.82);
@@ -346,7 +347,7 @@
   }
   .modal-overlay.active{display:flex;}
   .modal{
-    width:100%;max-width:480px;background:var(--card);
+    width:100%;max-width:520px;background:var(--card);
     border:1px solid var(--border-strong);
     border-radius:var(--radius);overflow:hidden;
     box-shadow:0 30px 80px -20px rgba(0,0,0,0.8);
@@ -364,10 +365,12 @@
   .progress-dots{display:flex;gap:6px;padding:14px 22px 0;}
   .progress-dots span{height:4px;flex:1;border-radius:2px;background:var(--border);transition:background .3s;}
   .progress-dots span.done{background:var(--accent);}
-  .chat-area{padding:20px 22px;min-height:200px;max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
-  .bubble{max-width:88%;padding:12px 16px;border-radius:14px;font-size:0.92rem;line-height:1.5;}
+  .chat-area{padding:20px 22px;min-height:200px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+  .bubble{max-width:92%;padding:12px 16px;border-radius:14px;font-size:0.92rem;line-height:1.55;}
   .bubble.bot{align-self:flex-start;background:rgba(59,130,246,0.08);border:1px solid var(--border);border-bottom-left-radius:4px;}
+  .bubble.bot b{color:var(--accent-light);}
   .bubble.user{align-self:flex-end;background:var(--gradient2);color:#fff;border-bottom-right-radius:4px;}
+  .bubble .inline-link{color:var(--accent-light);text-decoration:underline;}
   .typing{
     display:flex;gap:5px;align-self:flex-start;
     padding:12px 16px;
@@ -387,10 +390,12 @@
   .modal-input input:focus{border-color:var(--accent-light);}
   .modal-input button{
     background:var(--gradient2);color:#fff;border:none;border-radius:10px;
-    padding:0 20px;font-weight:600;cursor:pointer;transition:opacity .2s;
+    padding:0 22px;font-weight:600;cursor:pointer;transition:opacity .2s;
+    white-space:nowrap;
   }
   .modal-input button:hover{opacity:.85;}
-  .modal-final{padding:20px 22px 24px;}
+  .modal-input button:disabled{opacity:.4;cursor:not-allowed;}
+  .modal-final{padding:22px 24px 24px;}
   .ticket{
     background:var(--bg-alt);border:1px dashed var(--border-strong);border-radius:12px;
     padding:16px 18px;font-family:'JetBrains Mono',monospace;
@@ -401,17 +406,27 @@
   .final-actions{display:flex;gap:10px;flex-wrap:wrap;}
   .final-actions button, .final-actions a{
     flex:1;text-align:center;padding:11px;border-radius:10px;
-    font-weight:600;font-size:0.88rem;cursor:pointer;
-    transition:background .2s;
+    font-weight:600;font-size:0.88rem;cursor:pointer;border:none;
+    transition:background .2s, transform .2s;
+    min-width:140px;
   }
   .final-actions .copy-btn{background:transparent;border:1px solid var(--border-strong);color:var(--text);}
   .final-actions .copy-btn:hover{background:rgba(59,130,246,0.08);}
   .final-actions .discord-btn{
-    background:var(--gradient2);border:none;color:#fff;
+    background:var(--gradient2);color:#fff;
     box-shadow:0 0 16px rgba(59,130,246,0.2);
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
   }
-  .success-note{color:var(--success);font-size:0.85rem;margin-top:10px;display:none;}
+  .final-actions .discord-btn:hover{transform:translateY(-2px);}
+  .success-note{font-size:0.88rem;margin-top:12px;display:none;line-height:1.6;}
   .success-note.show{display:block;}
+  .discord-hint{
+    background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);
+    border-radius:10px;padding:10px 14px;font-size:0.82rem;
+    color:var(--text-muted);margin-top:6px;line-height:1.5;
+  }
+  .discord-hint b{color:var(--warning);}
+  .discord-hint a{color:var(--accent-light);text-decoration:underline;}
 
   @media(max-width:600px){
     section{padding:70px 6vw;}
@@ -453,7 +468,6 @@
     <a href="#pedidos" class="btn-primary">Empezar mi pedido →</a>
     <a href="#servicios" class="btn-ghost">Nuestros Servicios</a>
   </div>
-
   <div class="hero-panel">
     <div class="hero-panel-head">
       <div class="hp-left"><span class="live-dot"></span><span class="live-label">Ticket en vivo</span></div>
@@ -478,7 +492,6 @@
     <h2 class="section-title">🚀 Bienvenido a <span class="gradient-text-simple">ZentroxDev</span></h2>
     <p>En ZentroxDev convertimos tus ideas en soluciones digitales. Nos apasiona desarrollar herramientas modernas, funcionales y totalmente adaptadas a las necesidades de cada cliente. No vendemos plantillas: creamos soluciones diseñadas especialmente para ti.</p>
   </div>
-
   <div class="feature-grid">
     <div class="feature-card">
       <div class="fc-head"><span class="feature-icon">🤖</span><h3>Bots personalizados</h3></div>
@@ -544,7 +557,6 @@
       </ul>
     </div>
   </div>
-
   <div class="why-grid">
     <div class="why-item">
       <span class="num">01</span>
@@ -573,7 +585,6 @@
   <span class="eyebrow">Cómo trabajamos</span>
   <h2 class="section-title">De la idea a la entrega</h2>
   <p class="section-sub">Un proceso simple, pensado para que sepas exactamente en qué punto va tu proyecto.</p>
-
   <div class="process-track">
     <div class="process-step">
       <div class="line"></div>
@@ -605,7 +616,6 @@
   <span class="eyebrow">Haz tu pedido</span>
   <h2 class="section-title">¿Qué vamos a construir hoy?</h2>
   <p class="section-sub">Elige una opción y te haremos unas preguntas cortas para dejar tu pedido listo.</p>
-
   <div class="orders-grid">
     <div class="order-card" onclick="openOrder('bots')">
       <span class="oi">🤖</span>
@@ -700,13 +710,13 @@
     <div class="chat-area" id="chatArea"></div>
     <div class="modal-input" id="modalInputRow">
       <input type="text" id="modalInput" placeholder="Escribe tu respuesta..." onkeydown="if(event.key==='Enter')submitAnswer()">
-      <button onclick="submitAnswer()">Enviar</button>
+      <button id="modalSendBtn" onclick="submitAnswer()">Enviar</button>
     </div>
     <div class="modal-final" id="modalFinal" style="display:none;">
       <div class="ticket" id="ticketContent"></div>
       <div class="final-actions">
-        <button class="copy-btn" onclick="copyTicket()">Copiar pedido</button>
-        <a class="discord-btn" href="https://discord.gg/wsgxZbscBb" target="_blank">Unirme al Discord</a>
+        <button class="copy-btn" onclick="copyTicket()">📋 Copiar pedido</button>
+        <a class="discord-btn" href="https://discord.gg/wsgxZbscBb" target="_blank" id="finalDiscordBtn">💬 Ir al Discord</a>
       </div>
       <div class="success-note" id="successNote"></div>
     </div>
@@ -729,13 +739,76 @@ const serviceThumbnails = {
 };
 
 const services = {
-  bots: {name:'Bots Personalizados',icon:'🤖',questions:['¿Qué tipo de bot deseas comprar?','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  web: {name:'Páginas Web',icon:'🌐',questions:['¿Qué tipo de página web deseas comprar?','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  texturas: {name:'Texturas de ER:LC',icon:'🪄',questions:['¿Qué tipo de textura deseas comprar?','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  mapas: {name:'Mapas personalizados ER:LC',icon:'🗺️',questions:['¿Qué tipo de mapa deseas? (base, ciudad, comisaría, hospital, etc.)','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  discord: {name:'Servicios de Discord',icon:'🛠️',questions:['¿Qué necesitas para tu servidor de Discord? (bots, configuración, diseño, etc.)','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  documentos: {name:'Redacción de documentos ER:LC',icon:'📝',questions:['¿Qué tipo de documento necesitas? (reglamento, manual, guión, reporte, etc.)','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']},
-  diseno: {name:'Diseño gráfico',icon:'🎨',questions:['¿Qué tipo de diseño necesitas? (logo, banner, thumbnail, portada, etc.)','¿Cuál es tu método de pago?','¿Estás en el grupo de Discord? Dime tu usuario de Discord.']}
+  bots: {
+    name:'Bots Personalizados', icon:'🤖',
+    questions:[
+      '¿Qué tipo de bot necesitas? (moderación, economía, tickets, IA, roleplay, nivelación, música, etc.)',
+      'Describe detalladamente las funciones principales que debe tener el bot',
+      '¿Tienes algún ejemplo, referencia o bot similar en el que inspirarte? (puedes mencionar nombres o características)',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  web: {
+    name:'Páginas Web', icon:'🌐',
+    questions:[
+      '¿Qué tipo de página web necesitas? (landing page, tienda online, panel de control, blog, portafolio, etc.)',
+      'Describe las secciones o páginas que debe incluir (ej: inicio, servicios, contacto, galería, etc.)',
+      '¿Tienes algún diseño, referencia o ejemplo de lo que buscas? (colores, estilo, páginas de referencia)',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  texturas: {
+    name:'Texturas de ER:LC', icon:'🪄',
+    questions:[
+      '¿Qué tipo de textura deseas? (policía, EMS, mecánico, taxi, juez, personalizada, etc.)',
+      'Describe los colores, estilo y detalles específicos que debe tener la textura',
+      '¿Tienes imágenes de referencia o ejemplos para guiar el diseño?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  mapas: {
+    name:'Mapas personalizados ER:LC', icon:'🗺️',
+    questions:[
+      '¿Qué tipo de mapa deseas? (base, ciudad, comisaría, hospital, academia, etc.)',
+      'Describe el tamaño, estilo y características principales que debe incluir',
+      '¿Tienes referencias visuales, ejemplos o ideas concretas para el diseño?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  discord: {
+    name:'Servicios de Discord', icon:'🛠️',
+    questions:[
+      '¿Qué necesitas para tu servidor de Discord? (bots personalizados, configuración, diseño de canales, paneles, etc.)',
+      'Describe en detalle lo que requieres y para qué tipo de servidor es',
+      '¿Tienes algún ejemplo o referencia de lo que quieres lograr?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  documentos: {
+    name:'Redacción de documentos ER:LC', icon:'📝',
+    questions:[
+      '¿Qué tipo de documento necesitas? (reglamento, manual, guión, reporte, normativa, etc.)',
+      'Describe el contenido, la extensión y el formato que debe tener',
+      '¿Tienes algún ejemplo, formato o documento de referencia?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  diseno: {
+    name:'Diseño gráfico', icon:'🎨',
+    questions:[
+      '¿Qué tipo de diseño necesitas? (logo, banner, thumbnail, portada, interfaz, identidad visual, etc.)',
+      'Describe los colores, estilo, tipografía y elementos que debe incluir',
+      '¿Tienes referencias visuales, moodboard o ejemplos de lo que buscas?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  }
 };
 
 const heroServices = [
@@ -757,16 +830,19 @@ function cycleHero(){
 }
 setInterval(cycleHero,3200);
 
-let currentService=null,currentStep=0,currentTicketId=null,answers=[];
+let currentService=null, currentStep=0, currentTicketId=null, answers=[], detailQuestions=[];
 
 function generateTicketId(){return 'ZDX-'+Math.floor(1000+Math.random()*9000);}
 
-function getServiceKey(n){for(const[k,s]of Object.entries(services)){if(s.name===n)return k;}return 'bots';}
-
-async function sendTicketToDiscord(ticketId,service,answersList){
-  const detalle=answersList[0]||'—';
-  const metodo=answersList[1]||'—';
-  const usuario=answersList[2]||'—';
+async function sendTicketToDiscord(ticketId, service, answersList, detailQs){
+  const nonPayment = answersList.slice(0, -2);
+  const metodo = answersList[answersList.length-2] || '—';
+  const usuario = answersList[answersList.length-1] || '—';
+  let detalle = '';
+  nonPayment.forEach((a, i) => {
+    detalle += '▸ ' + a + '\n';
+  });
+  detalle = detalle.trim();
 
   try{
     const res=await fetch(BOT_API_URL+'/api/order',{
@@ -816,16 +892,21 @@ function openOrder(k){
     return;
   }
   currentService=services[k];currentStep=0;answers=[];
+  detailQuestions = currentService.questions.slice(0, -2);
   document.getElementById('modalIcon').textContent=currentService.icon;
   document.getElementById('modalTitle').textContent=currentService.name;
   document.getElementById('chatArea').innerHTML='';
   document.getElementById('modalFinal').style.display='none';
   document.getElementById('modalInputRow').style.display='flex';
   document.getElementById('successNote').classList.remove('show');
+  document.getElementById('modalSendBtn').disabled=false;
   const dots=document.getElementById('progressDots');dots.innerHTML='';
   currentService.questions.forEach(()=>{const d=document.createElement('span');dots.appendChild(d);});
   document.getElementById('modalOverlay').classList.add('active');
-  askNext();
+  setTimeout(()=>{
+    addBubble('👋 ¡Hola! Cuéntanos sobre tu proyecto. Responde estas preguntas para dejar tu pedido listo.','bot');
+    setTimeout(askNext, 600);
+  }, 400);
 }
 
 function closeOrder(){document.getElementById('modalOverlay').classList.remove('active');}
@@ -837,7 +918,9 @@ function updateDots(){
 
 function addBubble(t,w){
   const c=document.getElementById('chatArea'),b=document.createElement('div');
-  b.className='bubble '+w;b.textContent=t;c.appendChild(b);c.scrollTop=c.scrollHeight;
+  b.className='bubble '+w;
+  b.innerHTML=t.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  c.appendChild(b);c.scrollTop=c.scrollHeight;
 }
 
 function askNext(){
@@ -845,25 +928,47 @@ function askNext(){
   const chat=document.getElementById('chatArea'),typing=document.createElement('div');
   typing.className='typing';typing.innerHTML='<span></span><span></span><span></span>';
   chat.appendChild(typing);chat.scrollTop=chat.scrollHeight;
-  setTimeout(()=>{typing.remove();addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},500);
+  setTimeout(()=>{
+    typing.remove();
+    const q = currentService.questions[currentStep];
+    if (currentStep === currentService.questions.length - 1) {
+      const hint = document.createElement('div');
+      hint.className = 'discord-hint';
+      hint.innerHTML = '💡 <b>¿No estás en el servidor?</b> Únete primero: <a href="'+DISCORD_INVITE+'" target="_blank">discord.gg/wsgxZbscBb</a> y luego escribe tu usuario exacto aquí.';
+      chat.appendChild(hint);
+    }
+    addBubble(q, 'bot');
+    document.getElementById('modalInput').focus();
+  }, 500);
 }
 
 async function submitAnswer(){
   const input=document.getElementById('modalInput'),val=input.value.trim();
   if(!val)return;
+  const btn=document.getElementById('modalSendBtn');
+  btn.disabled=true;
   addBubble(val,'user');
-  const isDiscordQuestion=/discord/i.test(currentService.questions[currentStep]);
+  const qIndex = currentStep;
+  const isDiscordQuestion = (qIndex === currentService.questions.length - 1);
+  const isPaymentQuestion = (qIndex === currentService.questions.length - 2);
+
   answers.push(val);input.value='';currentStep++;
+
   const goNext=()=>{
-    if(currentStep<currentService.questions.length) setTimeout(askNext,350);
-    else{updateDots();setTimeout(showFinal,500);}
-  };
-  if(isDiscordQuestion){
-    if(/^(no|nop|nope|negativo)$/i.test(val.trim())){
-      setTimeout(()=>{addBubble('No hay problema, únete aquí y así podremos contactarte: '+DISCORD_INVITE,'bot');goNext();},450);
-      return;
+    if(currentStep<currentService.questions.length){
+      setTimeout(askNext,350);
+    }else{
+      updateDots();
+      setTimeout(()=>showFinal(), 500);
     }
-    const chat=document.getElementById('chatArea'),t=document.createElement('div');
+    btn.disabled=false;
+  };
+
+  if(isDiscordQuestion){
+    const chat=document.getElementById('chatArea');
+    const hint = chat.querySelector('.discord-hint');
+    if (hint) hint.remove();
+    const t=document.createElement('div');
     t.className='typing';t.innerHTML='<span></span><span></span><span></span>';
     chat.appendChild(t);chat.scrollTop=chat.scrollHeight;
     try{
@@ -875,48 +980,75 @@ async function submitAnswer(){
       t.remove();
       if(d.exists){
         answers[answers.length-1]=d.username;
-        addBubble('✅ Verificado como **'+d.display_name+'**','bot');
+        addBubble('✅ Verificado como <b>'+d.display_name+'</b> — gracias! Procesando tu pedido...','bot');
         goNext();
       }else{
         currentStep--;answers.pop();
-        addBubble('❌ No encontramos a **'+val+'** en el servidor. Únete a '+DISCORD_INVITE+' y escribe tu usuario exacto.','bot');
-        setTimeout(()=>{addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},600);
+        addBubble('❌ No encontramos a <b>'+val+'</b> en el servidor. Asegúrate de:<br>▸ Estar en nuestro Discord: <a class="inline-link" href="'+DISCORD_INVITE+'" target="_blank">discord.gg/wsgxZbscBb</a><br>▸ Escribir tu nombre de usuario EXACTO (ej: enmanuelpg)<br><br>Intenta de nuevo cuando estés listo.','bot');
+        const hint2 = document.createElement('div');
+        hint2.className = 'discord-hint';
+        hint2.innerHTML = '💡 <b>¿Ya te uniste?</b> Escribe tu usuario exacto. Si aún no lo haces, únete primero: <a href="'+DISCORD_INVITE+'" target="_blank">discord.gg/wsgxZbscBb</a>';
+        chat.appendChild(hint2);
+        btn.disabled=false;
+        document.getElementById('modalInput').focus();
       }
     }catch(e){
       t.remove();currentStep--;answers.pop();
       addBubble('⚠️ Error de conexión. Intenta de nuevo.','bot');
-      setTimeout(()=>{addBubble(currentService.questions[currentStep],'bot');document.getElementById('modalInput').focus();},600);
+      btn.disabled=false;
+      document.getElementById('modalInput').focus();
     }
-  }else goNext();
+  }else{
+    goNext();
+  }
 }
 
 async function showFinal(){
   document.getElementById('modalInputRow').style.display='none';
   document.getElementById('modalFinal').style.display='block';
   currentTicketId=generateTicketId();
-  const labels=['Detalle','Método de pago','Usuario de Discord'];
-  let ticket='Ticket: '+currentTicketId+'\nServicio: '+currentService.name+'\n';
-  answers.forEach((a,i)=>{ticket+=labels[i]+': '+a+'\n';});
-  ticket+='Estado: Recibido';
-  document.getElementById('ticketContent').textContent=ticket;
+  const nonPayment = answers.slice(0, -2);
+  const metodo = answers[answers.length-2] || '—';
+  const usuario = answers[answers.length-1] || '—';
+  let ticket = 'Ticket: ' + currentTicketId + '\n';
+  ticket += 'Servicio: ' + currentService.name + '\n';
+  ticket += '━━━━━━━━━━━━━━━━━━━\n';
+  nonPayment.forEach((a, i) => {
+    ticket += 'Detalle ' + (i+1) + ': ' + a + '\n';
+  });
+  ticket += '━━━━━━━━━━━━━━━━━━━\n';
+  ticket += 'Pago: ' + metodo + '\n';
+  ticket += 'Discord: ' + usuario + '\n';
+  ticket += 'Estado: Pendiente';
+  document.getElementById('ticketContent').textContent = ticket;
+
   const note=document.getElementById('successNote');
-  note.classList.add('show');note.style.color='var(--text-muted)';note.textContent='⏳ Creando tu ticket...';
-  const r=await sendTicketToDiscord(currentTicketId,currentService,answers);
+  note.classList.add('show');note.style.color='var(--text-muted)';note.textContent='⏳ Creando tu ticket en Discord...';
+
+  const r=await sendTicketToDiscord(currentTicketId, currentService, answers, detailQuestions);
   if(r.ok){
     note.style.color='var(--success)';
-    note.innerHTML='✅ <b>Ticket '+currentTicketId+'</b> creado.<br>📌 <a href="'+r.channel_url+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">'+r.channel_mention+'</a> — canal privado de tu pedido.';
-    const btn=document.querySelector('.final-actions .discord-btn');
-    if(btn){btn.href=r.channel_url;btn.textContent='Ir a mi ticket →';}
+    note.innerHTML='✅ <b>Pedido recibido!</b> Hemos creado un canal privado para ti.<br>📌 <a href="'+r.channel_url+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">'+r.channel_mention+'</a>';
+    const btn=document.getElementById('finalDiscordBtn');
+    if(btn){btn.href=r.channel_url;btn.textContent='🔗 Ir a mi ticket →';}
   }else{
     note.style.color='#fbbf24';
-    if(r.error==='USER_NOT_FOUND') note.innerHTML='⚠️ <b>No estás en el Discord.</b> Únete: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/wsgxZbscBb</a>';
-    else note.textContent='⚠️ Error al crear el ticket. Copia el pedido y envíalo por Discord.';
+    if(r.error==='USER_NOT_FOUND'){
+      note.innerHTML='⚠️ <b>No estás en el Discord.</b> Únete para que podamos contactarte: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/wsgxZbscBb</a>';
+    }else{
+      note.innerHTML='⚠️ Error al crear el ticket. Copia el pedido y envíanoslo por Discord: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/wsgxZbscBb</a>';
+    }
   }
 }
 
 function copyTicket(){
   const t=document.getElementById('ticketContent').textContent;
-  navigator.clipboard.writeText(t).then(()=>{document.getElementById('successNote').classList.add('show');}).catch(()=>{});
+  navigator.clipboard.writeText(t).then(()=>{
+    const note=document.getElementById('successNote');
+    note.classList.add('show');
+    note.style.color='var(--success)';
+    note.textContent='✅ Copiado al portapapeles!';
+  }).catch(()=>{});
 }
 
 document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeOrder();});

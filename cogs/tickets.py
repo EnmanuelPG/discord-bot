@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import re
 
-PEDIDOS_CHANNEL_ID = 1524947903775375551
+PEDIDOS_CHANNEL_ID = 1524947179771265106
 DEVELOPER_ROLE_ID = 1525311162499993730
 TICKETS_CATEGORY_NAME = "TICKETS"
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV"
@@ -61,21 +61,24 @@ async def create_ticket_channel(guild, ticket_id, embed, username):
     )
 
     welcome_embed = discord.Embed(
-        title=f"Ticket {ticket_id}",
-        description=f"**Nuevo pedido recibido**\n{embed.title if embed.title else ''}",
+        title=f"🎫 Ticket {ticket_id}",
+        description=(
+            f"📦 **{embed.title if embed.title else 'Pedido'}**\n\n"
+            f"🎯 ¡Bienvenido! Gracias por confiar en **ZentroxDev**.\n\n"
+            f"Tu solicitud ha sido recibida correctamente. Un administrador "
+            f"revisara los detalles y te atiende a la brevedad.\n\n"
+            f"📌 **Mientras tanto:**\n"
+            f"▸ Puedes ir explicando tu pedido con mas detalle aqui.\n"
+            f"▸ Si tienes archivos de referencia, adjuntalos en este canal.\n"
+            f"▸ Un miembro del equipo te respondera pronto."
+        ),
         color=0x3b82f6,
+        timestamp=discord.utils.utcnow()
     )
-    if embed.fields:
-        for field in embed.fields:
-            welcome_embed.add_field(name=field.name, value=field.value, inline=field.inline)
     welcome_embed.set_footer(text="ZentroxDev · Ticket automatico")
 
     member_mention = member.mention if member else "*(usuario no encontrado)*"
-    welcome_text = (
-        f"{member_mention}\n\n"
-        f"**Bienvenido a tu ticket!**\n"
-        f"Un desarrollador te atendra pronto. Mientras tanto, puedes ir explicando tu pedido con mas detalle."
-    )
+    welcome_text = f"{member_mention}\n\n**Bienvenido a tu ticket!**"
     await ticket_channel.send(content=welcome_text, embed=welcome_embed)
     return ticket_channel, True
 
@@ -87,21 +90,42 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
         return
 
     embed = discord.Embed(
-        title=f"Pedido {ticket_id}",
-        description=f"**Nuevo pedido recibido!**",
+        title="✨ Nuevo pedido recibido",
+        description=(
+            f"📦 **{service_name}**\n\n"
+            f"🎯 Bienvenido y gracias por confiar en **ZentroxDev**.\n"
+            f"Hemos recibido tu solicitud y uno de nuestros administradores "
+            f"la revisara en breve."
+        ),
         color=0x3b82f6,
         timestamp=discord.utils.utcnow()
     )
-    field_lines = f"**Ticket:** {ticket_id}\n**Servicio:** {service_name}"
-    if detalle:
-        field_lines += f"\n**Detalle:** {detalle}"
-    if metodo:
-        field_lines += f"\n**Metodo de pago:** {metodo}"
-    embed.add_field(name="Informacion del pedido", value=field_lines, inline=False)
-    embed.add_field(name="Discord", value=f"<@{usuario}>" if usuario.isdigit() and len(usuario) == 18 else usuario, inline=False)
-    embed.add_field(name="Canal de ticket", value=ticket_channel.mention, inline=False)
-    embed.set_footer(text="ZentroxDev", icon_url=bot_user.display_avatar.url if bot_user else None)
+
+    info = (
+        f"**Ticket:** {ticket_id}\n"
+        f"**Servicio:** {service_name}\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"**Detalle:**\n{detalle}\n\n"
+        f"**Pago:** {metodo}\n"
+        f"**Discord:** {usuario}"
+    )
+    embed.add_field(name="📋 Informacion del pedido", value=info, inline=False)
+
+    pasos = (
+        "▸ Un miembro del equipo revisara tu solicitud.\n"
+        "▸ Recibiras una respuesta por Discord en maximo 24 horas habiles.\n"
+        "▸ Es posible que te solicitemos informacion adicional.\n"
+        "▸ No cierres este ticket hasta que tu pedido este finalizado."
+    )
+    embed.add_field(name="📌 Proximos pasos", value=pasos, inline=False)
+
+    embed.set_footer(
+        text="ZentroxDev © 2026 · Los administradores te contactaran pronto",
+        icon_url=bot_user.display_avatar.url if bot_user else None
+    )
+
     await pedidos_channel.send(embed=embed)
+    await pedidos_channel.send(f"📌 **Canal del ticket:** {ticket_channel.mention}")
 
 
 class Tickets(commands.Cog):
@@ -126,7 +150,7 @@ class Tickets(commands.Cog):
         service_name = None
 
         for field in embed.fields:
-            if "Informacion del pedido" in field.name or "Información del pedido" in field.name:
+            if "Informacion del pedido" in field.name or "Informacion del pedido" in field.name:
                 value = field.value
                 ticket_match = re.search(r'Ticket:\s*(\S+)', value)
                 if ticket_match:
