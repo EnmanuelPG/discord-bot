@@ -77,26 +77,71 @@ async def send_ticket_transcript(channel, creator_id, closer_id, ticket_id):
         pass
 
 
-class TicketCloseView(discord.ui.View):
+class TicketView(discord.ui.View):
     def __init__(self, creator_id: int):
         super().__init__(timeout=None)
         self.creator_id = creator_id
+        self._claimed_id = 0
+
+    def _is_staff(self, member: discord.Member) -> bool:
+        return any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
+
+    def _get_creator_from_topic(self, channel) -> int:
+        if channel.topic:
+            for part in channel.topic.split("|"):
+                if part.startswith("creator:"):
+                    try:
+                        return int(part.split(":", 1)[1])
+                    except ValueError:
+                        pass
+        return 0
+
+    def _get_claimed_from_topic(self, channel) -> int:
+        if channel.topic:
+            for part in channel.topic.split("|"):
+                if part.startswith("claimed:"):
+                    try:
+                        val = part.split(":", 1)[1]
+                        return int(val) if val else 0
+                    except ValueError:
+                        pass
+        return 0
+
+    @discord.ui.button(label="📋 Reclamar ticket", style=discord.ButtonStyle.primary, custom_id="claim_ticket")
+    async def claim_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            if not self._is_staff(interaction.user):
+                await interaction.response.send_message("❌ Solo el staff puede reclamar tickets.", ephemeral=True)
+                return
+            claimed_id = self._get_claimed_from_topic(interaction.channel)
+            if claimed_id:
+                claimer = interaction.guild.get_member(claimed_id)
+                name = claimer.display_name if claimer else str(claimed_id)
+                await interaction.response.send_message(f"⚠️ Este ticket ya fue reclamado por **{name}**.", ephemeral=True)
+                return
+            new_topic = f"creator:{self._get_creator_from_topic(interaction.channel)}|claimed:{interaction.user.id}"
+            await interaction.channel.edit(topic=new_topic)
+            await interaction.channel.send(f"📋 **Ticket reclamado por {interaction.user.mention}**")
+            await interaction.response.send_message("✅ Ticket reclamado con éxito.", ephemeral=True)
+        except Exception:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("❌ Error al reclamar el ticket.", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🔒 Cerrar ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket")
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             member = interaction.user
-            creator_id = self.creator_id
-            if not creator_id and interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
-                try:
-                    creator_id = int(interaction.channel.topic.split(":", 1)[1])
-                except ValueError:
-                    pass
-            has_role = any(role.id == TICKETS_ROLE_ID for role in member.roles)
+            creator_id = self._get_creator_from_topic(interaction.channel)
+            if not creator_id:
+                creator_id = self.creator_id
+            is_staff = self._is_staff(member)
             is_creator = member.id == creator_id
-            if not has_role and not is_creator:
+            if not is_staff and not is_creator:
                 await interaction.response.send_message(
-                    "❌ Solo el creador del ticket o el staff de tickets puede cerrarlo.", ephemeral=True
+                    "❌ Solo el creador del ticket o el staff puede cerrarlo.", ephemeral=True
                 )
                 return
             await interaction.response.defer()
@@ -192,7 +237,7 @@ async def create_ticket_channel(guild, ticket_id, embed, username, category_id=N
 
     member_mention = member.mention if member else "*(usuario no encontrado)*"
     welcome_text = f"{member_mention}\n━━━━━━━━━━━━━━━━━━━━━━━━\n**🎟️ Bienvenido a tu ticket — ZentroxDev**"
-    view = TicketCloseView(creator_id=member.id if member else 0)
+    view = TicketView(creator_id=member.id if member else 0)
     await ticket_channel.send(content=welcome_text, embed=welcome_embed, view=view)
     return ticket_channel, True
 
@@ -479,16 +524,18 @@ class Tickets(commands.Cog):
             except Exception:
                 pass
 
-    @app_commands.command(name="close", description="Cierra el ticket actual (solo staff de tickets o creador)")
+    @app_commands.command(name="close", description="Cierra el ticket actual (solo staff o creador)")
     async def close(self, interaction: discord.Interaction):
         try:
-            has_role = any(role.id == TICKETS_ROLE_ID for role in interaction.user.roles)
+            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
             creator_id = 0
-            if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
-                try:
-                    creator_id = int(interaction.channel.topic.split(":", 1)[1])
-                except ValueError:
-                    pass
+            if interaction.channel.topic:
+                for part in interaction.channel.topic.split("|"):
+                    if part.startswith("creator:"):
+                        try:
+                            creator_id = int(part.split(":", 1)[1])
+                        except ValueError:
+                            pass
             if not has_role and interaction.user.id != creator_id:
                 await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
                 return
@@ -589,4 +636,4 @@ class Tickets(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
     bot.add_view(TicketPanelView())
-    bot.add_view(TicketCloseView(0))
+    bot.add_view(TicketView(0))
