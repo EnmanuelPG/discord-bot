@@ -8,6 +8,7 @@ import re
 
 PEDIDOS_CHANNEL_ID = 1525894272988217536
 DEVELOPER_ROLE_ID = 1525894268651176166
+TICKETS_ROLE_ID = 1525894268651176160
 PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
@@ -22,7 +23,7 @@ class TicketCloseView(discord.ui.View):
     @discord.ui.button(label="🔒 Cerrar ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket")
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         member = interaction.user
-        has_role = any(role.id == DEVELOPER_ROLE_ID for role in member.roles)
+        has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
         is_creator = member.id == self.creator_id
         if not has_role and not is_creator:
             await interaction.response.send_message(
@@ -73,12 +74,15 @@ async def create_ticket_channel(guild, ticket_id, embed, username, category_id=N
         return existing, False
 
     developer_role = guild.get_role(DEVELOPER_ROLE_ID)
+    tickets_role = guild.get_role(TICKETS_ROLE_ID)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(view_channel=False),
         guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True, manage_messages=True),
     }
     if developer_role:
         overwrites[developer_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+    if tickets_role:
+        overwrites[tickets_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
     if member:
         overwrites[member] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
@@ -306,7 +310,7 @@ class Tickets(commands.Cog):
 
     @app_commands.command(name="close", description="Cierra el ticket actual (solo admins o creador)")
     async def close(self, interaction: discord.Interaction):
-        has_role = any(role.id == DEVELOPER_ROLE_ID for role in interaction.user.roles)
+        has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
         creator_id = 0
         if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
             try:
