@@ -22,20 +22,26 @@ class TicketCloseView(discord.ui.View):
 
     @discord.ui.button(label="🔒 Cerrar ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket")
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        member = interaction.user
-        has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
-        is_creator = member.id == self.creator_id
-        if not has_role and not is_creator:
-            await interaction.response.send_message(
-                "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
-            )
-            return
-        await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
-        await asyncio.sleep(5)
         try:
+            member = interaction.user
+            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
+            is_creator = member.id == self.creator_id
+            if not has_role and not is_creator:
+                await interaction.response.send_message(
+                    "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
+                )
+                return
+            await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
+            await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {member.name} ({member.id})")
-        except Exception:
-            pass
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
 
 async def find_member_in_guild(guild, discord_username):
@@ -192,31 +198,94 @@ class TicketPanelView(discord.ui.View):
 
     @discord.ui.button(label="🤖 Bots Personalizados", style=discord.ButtonStyle.primary, custom_id="panel_bots", row=0)
     async def btn_bots(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Bots Personalizados")
+        try:
+            await self._create_ticket(interaction, "Bots Personalizados")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🌐 Páginas Web", style=discord.ButtonStyle.primary, custom_id="panel_web", row=0)
     async def btn_web(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Páginas Web")
+        try:
+            await self._create_ticket(interaction, "Páginas Web")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🪄 Texturas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_texturas", row=1)
     async def btn_texturas(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Texturas de ER:LC")
+        try:
+            await self._create_ticket(interaction, "Texturas de ER:LC")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🗺️ Mapas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_mapas", row=1)
     async def btn_mapas(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Mapas personalizados ER:LC")
+        try:
+            await self._create_ticket(interaction, "Mapas personalizados ER:LC")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🛠️ Servicios Discord", style=discord.ButtonStyle.secondary, custom_id="panel_discord", row=2)
     async def btn_discord(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Servicios de Discord")
+        try:
+            await self._create_ticket(interaction, "Servicios de Discord")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="📝 Documentos ER:LC", style=discord.ButtonStyle.secondary, custom_id="panel_documentos", row=2)
     async def btn_documentos(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Redacción de documentos ER:LC")
+        try:
+            await self._create_ticket(interaction, "Redacción de documentos ER:LC")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🎨 Diseño Gráfico", style=discord.ButtonStyle.danger, custom_id="panel_diseno", row=3)
     async def btn_diseno(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Diseño gráfico")
+        try:
+            await self._create_ticket(interaction, "Diseño gráfico")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
         guild = interaction.guild
@@ -271,23 +340,32 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
         self.bot = bot
 
     async def on_submit(self, interaction: discord.Interaction):
-        ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
-        username = interaction.user.name
-        guild = interaction.guild
-        if not guild:
-            await interaction.response.send_message("❌ Este comando solo funciona en un servidor.", ephemeral=True)
-            return
-        detalle_completo = self.detalle.value
-        if self.plazo.value:
-            detalle_completo += f"\n\n**Plazo:** {self.plazo.value}"
-        dummy_embed = discord.Embed(title=f"📦 {self.servicio.value}")
-        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
-        if created:
-            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
-        await interaction.response.send_message(
-            f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
-            ephemeral=True
-        )
+        try:
+            ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+            username = interaction.user.name
+            guild = interaction.guild
+            if not guild:
+                await interaction.response.send_message("❌ Este comando solo funciona en un servidor.", ephemeral=True)
+                return
+            detalle_completo = self.detalle.value
+            if self.plazo.value:
+                detalle_completo += f"\n\n**Plazo:** {self.plazo.value}"
+            dummy_embed = discord.Embed(title=f"📦 {self.servicio.value}")
+            ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
+            if created:
+                await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
+            await interaction.response.send_message(
+                f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
+                ephemeral=True
+            )
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
 
 class Tickets(commands.Cog):
@@ -297,35 +375,59 @@ class Tickets(commands.Cog):
     @app_commands.command(name="panel", description="Envía el panel de tickets al canal configurado")
     @app_commands.default_permissions(administrator=True)
     async def panel(self, interaction: discord.Interaction):
-        channel = interaction.guild.get_channel(TICKET_PANEL_CHANNEL_ID) if interaction.guild else None
-        if not channel:
-            await interaction.response.send_message("❌ Canal de panel no encontrado.", ephemeral=True)
-            return
-        await channel.send(embed=PANEL_EMBED, view=TicketPanelView())
-        await interaction.response.send_message(f"✅ Panel enviado a {channel.mention}", ephemeral=True)
+        try:
+            channel = interaction.guild.get_channel(TICKET_PANEL_CHANNEL_ID) if interaction.guild else None
+            if not channel:
+                await interaction.response.send_message("❌ Canal de panel no encontrado.", ephemeral=True)
+                return
+            await channel.send(embed=PANEL_EMBED, view=TicketPanelView())
+            await interaction.response.send_message(f"✅ Panel enviado a {channel.mention}", ephemeral=True)
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @app_commands.command(name="pedido", description="Solicita un servicio y crea un ticket")
     async def pedido(self, interaction: discord.Interaction):
-        await interaction.response.send_modal(PedidoModal(self.bot))
+        try:
+            await interaction.response.send_modal(PedidoModal(self.bot))
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @app_commands.command(name="close", description="Cierra el ticket actual (solo admins o creador)")
     async def close(self, interaction: discord.Interaction):
-        has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
-        creator_id = 0
-        if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
-            try:
-                creator_id = int(interaction.channel.topic.split(":", 1)[1])
-            except ValueError:
-                pass
-        if not has_role and interaction.user.id != creator_id:
-            await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
-            return
-        await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}")
-        await asyncio.sleep(5)
         try:
+            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
+            creator_id = 0
+            if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
+                try:
+                    creator_id = int(interaction.channel.topic.split(":", 1)[1])
+                except ValueError:
+                    pass
+            if not has_role and interaction.user.id != creator_id:
+                await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
+                return
+            await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}")
+            await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {interaction.user.name} ({interaction.user.id})")
-        except Exception:
-            pass
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
