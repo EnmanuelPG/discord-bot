@@ -675,6 +675,17 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_load(self):
+        for guild in self.bot.guilds:
+            if guild.id not in ALLOWED_GUILDS:
+                owner = self.bot.get_user(CREATOR_ID)
+                if owner:
+                    try:
+                        await owner.send(f"🚫 Bot removido de **{guild.name}** ({guild.id}) — no autorizado.")
+                    except Exception:
+                        pass
+                await guild.leave()
+
     @app_commands.command(name="panel", description="Envía el panel de tickets al canal configurado")
     @app_commands.default_permissions(administrator=True)
     async def panel(self, interaction: discord.Interaction):
@@ -840,6 +851,180 @@ class Tickets(commands.Cog):
             return
         await interaction.response.send_message("👋 Saliendo del servidor...")
         await interaction.guild.leave()
+
+    @app_commands.command(name="guia", description="📖 Guía completa para el staff sobre todos los servicios")
+    async def guia(self, interaction: discord.Interaction):
+        if interaction.guild.id not in ALLOWED_GUILDS:
+            await interaction.response.send_message("❌ Este comando no está disponible en este servidor.", ephemeral=True)
+            return
+        embed = discord.Embed(
+            title="📖 Guía Completa para el Staff — ZentroxDev",
+            description="Procedimientos detallados para cada servicio que ofrecemos.",
+            color=0x5865F2
+        )
+
+        embed.add_field(
+            name="🤖 Bots Personalizados",
+            value=(
+                "**Tecnologías:** discord.py, nextcord, discord.js\n\n"
+                "**Desarrollo:**\n"
+                "• Crear bot en Discord Developer Portal\n"
+                "• Elegir framework según el lenguaje\n"
+                "• Hosting local para pruebas\n\n"
+                "**Hosting 24/7 (Gratuito):**\n"
+                "• **Railway:** Conectar GitHub → Deploy automático\n"
+                "  └ Usar `Procfile` con `worker: python main.py`\n"
+                "• **Render:** Servicio Web → Start command\n"
+                "  └ `gunicorn main:app` o `python main.py`\n"
+                "• **Fly.io:** `fly launch` → `fly deploy`\n"
+                "• **Replit:** No recomendado (se duerme)\n\n"
+                "**Hosting 24/7 (Pago):**\n"
+                "• VPS (DigitalOcean, Linode, Contabo) desde $5/mes\n"
+                "• Usar `pm2` o `screen` para mantener activo\n\n"
+                "**Claves para 24/7:**\n"
+                "• El archivo principal debe tener un loop infinito\n"
+                "• Usar `asyncio.Event().wait()` en el main\n"
+                "• Railway requiere `web:` o `worker:` en Procfile\n"
+                "• Configurar variables de entorno (.env)"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🌐 Páginas Web",
+            value=(
+                "**Frontend:** HTML, CSS, JS, React, Next.js, Tailwind\n"
+                "**Backend:** Node.js, Python, PHP\n\n"
+                "**Desarrollo:**\n"
+                "• Maquetar diseño (Figma opcional)\n"
+                "• Desarrollar componentes\n"
+                "• Responsive design obligatorio\n\n"
+                "**Hosting Web:**\n"
+                "• **Vercel:** Ideal para Next.js y estático\n"
+                "• **Netlify:** Forms + funciones serverless\n"
+                "• **Railway:** Para backend + frontend\n"
+                "• **Cloudflare Pages:** Rápido y global\n\n"
+                "**Dominio:**\n"
+                "• Comprar en Namecheap, GoDaddy o Nic.ar\n"
+                "• Conectar DNS → Vercel/Netlify/Railway\n"
+                "• SSL automático con la mayoría de hosts"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🪄 Texturas ER:LC",
+            value=(
+                "**Herramientas:**\n"
+                "• Blockbench (recomendado)\n"
+                "• Photoshop / GIMP / Paint.NET\n\n"
+                "**Formato:**\n"
+                "• Resolución: 16×16, 32×32, 64×64\n"
+                "• Formato: PNG con transparencia\n"
+                "• Exportar como .png o .mcpack\n\n"
+                "**Proceso:**\n"
+                "• Crear diseño base en Blockbench\n"
+                "• Texturizar cada cara del modelo\n"
+                "• Probar en ER:LC antes de entregar\n"
+                "• Empaquetar en .zip con instrucciones"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🗺️ Mapas personalizados ER:LC",
+            value=(
+                "**Herramientas:**\n"
+                "• Editor de mapas de ER:LC (Rmap)\n"
+                "• Blender (para modelos 3D)\n\n"
+                "**Proceso:**\n"
+                "• Planificar layout del mapa\n"
+                "• Construir terreno base\n"
+                "• Añadir edificios y decoración\n"
+                "• Optimizar para rendimiento\n"
+                "• Probar con varios jugadores\n\n"
+                "**Entrega:** Archivo .rmap + screenshots"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🛠️ Servicios Discord",
+            value=(
+                "**Configuración del servidor:**\n"
+                "• Roles y permisos bien estructurados\n"
+                "• Canales por categorías (info, texto, voz)\n"
+                "• Sistema de moderación (logs, warns)\n\n"
+                "**Herramientas:**\n"
+                "• Dyno, MEE6, Carl-bot para automod\n"
+                "• Tickets con bots especializados\n"
+                "• Sistema de niveles y economía\n\n"
+                "**Seguridad:**\n"
+                "• Verificación en 2 pasos\n"
+                "• Anti-raid / Anti-spam\n"
+                "• Backups periódicos"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="📝 Redacción de documentos ER:LC",
+            value=(
+                "**Tipos de documentos:**\n"
+                "• Reglas del servidor\n"
+                "• Sistema de sanciones\n"
+                "• Lore e historia\n"
+                "• Rangos y jerarquías\n"
+                "• Normativas de roleplay\n\n"
+                "**Formato recomendado:**\n"
+                "• Google Docs o PDF\n"
+                "• Índice claro al inicio\n"
+                "• Lenguaje formal y consistente\n"
+                "• Ejemplos para claridad\n\n"
+                "**Entrega:** Documento editable + PDF"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🎨 Diseño Gráfico",
+            value=(
+                "**Herramientas:**\n"
+                "• Photoshop, Illustrator, Canva, Figma\n"
+                "• GIMP (alternativa gratuita a Photoshop)\n\n"
+                "**Formatos de entrega:**\n"
+                "• Logos: PNG + SVG + AI/PSD\n"
+                "• Banners: PNG/JPG en tamaño exacto\n"
+                "• Thumbnails: 1280×720px, JPG/PNG\n\n"
+                "**Consejos:**\n"
+                "• Usar paleta de colores del cliente\n"
+                "• Tipografías legibles y profesionales\n"
+                "• Resolución mínima 300 DPI para impresión"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🤝 Alianzas",
+            value=(
+                "**Proceso:**\n"
+                "• Revisar que la comunidad sea activa\n"
+                "• Verificar que no sea contenido tóxico\n"
+                "• Acordar términos de la alianza\n\n"
+                "**Tipos de alianza:**\n"
+                "• Publicidad mutua en Discord\n"
+                "• Cross-promoción en redes sociales\n"
+                "• Eventos conjuntos\n"
+                "• Colaboraciones en proyectos\n\n"
+                "**Seguimiento:**\n"
+                "• Agregar a <#1525894272988217536>\n"
+                "• Actualizar cada mes el estado"
+            ),
+            inline=False
+        )
+
+        embed.set_footer(text="ZentroxDev © 2026 · Guía interna para el staff")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):

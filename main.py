@@ -15,6 +15,16 @@ intents.members = True
 bot = commands.Bot(command_prefix=None, intents=intents)
 GUILD_ID = int(config.GUILD_ID) if config.GUILD_ID else None
 
+
+async def global_guild_check(interaction: discord.Interaction) -> bool:
+    from cogs.tickets import ALLOWED_GUILDS
+    if interaction.guild and interaction.guild.id not in ALLOWED_GUILDS:
+        return False
+    return True
+
+
+bot.tree.interaction_check = global_guild_check
+
 _target_guild = None
 _bot_ready = asyncio.Event()
 
