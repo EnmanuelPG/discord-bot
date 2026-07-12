@@ -8,7 +8,8 @@ import re
 
 PEDIDOS_CHANNEL_ID = 1525894272988217536
 DEVELOPER_ROLE_ID = 1525894268651176166
-TICKETS_CATEGORY_NAME = "TICKETS"
+PANEL_CATEGORY_ID = 1525894274250707057
+WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
 
@@ -58,9 +59,9 @@ async def find_member_in_guild(guild, discord_username):
     return member
 
 
-async def create_ticket_channel(guild, ticket_id, embed, username):
+async def create_ticket_channel(guild, ticket_id, embed, username, category_id=None):
     member = await find_member_in_guild(guild, username)
-    category = discord.utils.get(guild.categories, name=TICKETS_CATEGORY_NAME)
+    category = guild.get_channel(category_id) if category_id else discord.utils.get(guild.categories, name="TICKETS")
     if not category:
         category = await guild.create_category(
             TICKETS_CATEGORY_NAME,
@@ -220,7 +221,7 @@ class TicketPanelView(discord.ui.View):
             return
         ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
         dummy_embed = discord.Embed(title=f"📦 {service_name}")
-        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name)
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name, category_id=PANEL_CATEGORY_ID)
         if not created:
             await interaction.response.send_message(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
             return
@@ -276,7 +277,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
         if self.plazo.value:
             detalle_completo += f"\n\n**Plazo:** {self.plazo.value}"
         dummy_embed = discord.Embed(title=f"📦 {self.servicio.value}")
-        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username)
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
         if created:
             await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
         await interaction.response.send_message(
@@ -376,7 +377,7 @@ class Tickets(commands.Cog):
             )
             return
 
-        ticket_channel, created = await create_ticket_channel(guild, ticket_id, embed, discord_username)
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, embed, discord_username, category_id=WEB_CATEGORY_ID)
 
         if not created:
             new_embed = embed.copy()
