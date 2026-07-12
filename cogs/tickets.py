@@ -24,8 +24,14 @@ class TicketCloseView(discord.ui.View):
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             member = interaction.user
+            creator_id = self.creator_id
+            if not creator_id and interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
+                try:
+                    creator_id = int(interaction.channel.topic.split(":", 1)[1])
+                except ValueError:
+                    pass
             has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
-            is_creator = member.id == self.creator_id
+            is_creator = member.id == creator_id
             if not has_role and not is_creator:
                 await interaction.response.send_message(
                     "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
@@ -502,3 +508,4 @@ class Tickets(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
     bot.add_view(TicketPanelView())
+    bot.add_view(TicketCloseView(0))
