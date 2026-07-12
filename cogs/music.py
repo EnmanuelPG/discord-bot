@@ -201,17 +201,24 @@ class Music(commands.Cog):
 
     async def _pause_callback(self, interaction, btn):
         vc = interaction.guild.voice_client
-        if vc and vc.is_playing():
+        if not vc:
+            await interaction.response.send_message("Nothing playing", ephemeral=True)
+            return
+        await interaction.response.defer()
+        if vc.is_playing():
             vc.pause()
             btn.emoji = "▶️"
-            await interaction.response.edit_message(view=btn.view)
-        elif vc and vc.is_paused():
+        elif vc.is_paused():
             vc.resume()
             self.last_activity[interaction.guild.id] = asyncio.get_event_loop().time()
             btn.emoji = "⏸️"
-            await interaction.response.edit_message(view=btn.view)
         else:
-            await interaction.response.send_message("Nothing playing", ephemeral=True)
+            await interaction.followup.send("Nothing playing", ephemeral=True)
+            return
+        try:
+            await interaction.edit_original_response(view=btn.view)
+        except Exception:
+            pass
 
     async def _skip_callback(self, interaction, guild_id):
         vc = interaction.guild.voice_client
@@ -225,10 +232,14 @@ class Music(commands.Cog):
             await interaction.response.send_message("Nothing playing", ephemeral=True)
 
     async def _like_callback(self, interaction, btn):
+        await interaction.response.defer()
         liked = getattr(btn, "_liked", False)
         btn._liked = not liked
         btn.style = discord.ButtonStyle.danger if btn._liked else discord.ButtonStyle.secondary
-        await interaction.response.edit_message(view=btn.view)
+        try:
+            await interaction.edit_original_response(view=btn.view)
+        except Exception:
+            pass
 
     async def play_next(self, guild_id):
         queue = self.get_queue(guild_id)
@@ -387,6 +398,7 @@ class Music(commands.Cog):
             await interaction.response.send_message("Debes estar en un canal de voz", ephemeral=True)
             return
 
+        await interaction.response.defer()
         channel = interaction.user.voice.channel
         if interaction.guild.voice_client:
             if interaction.guild.voice_client.channel != channel:
@@ -395,7 +407,6 @@ class Music(commands.Cog):
             await channel.connect()
 
         self.text_channels[interaction.guild.id] = interaction.channel
-        await interaction.response.defer()
 
         is_url = query.startswith("http://") or query.startswith("https://")
 

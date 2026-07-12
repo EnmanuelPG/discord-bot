@@ -5,6 +5,7 @@ import asyncio
 import random
 import string
 import re
+import io
 
 PEDIDOS_CHANNEL_ID = 1525894272988217536
 DEVELOPER_ROLE_ID = 1525894268651176166
@@ -13,6 +14,67 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
+
+
+async def send_ticket_transcript(channel, creator_id, closer_id, ticket_id):
+    try:
+        messages = []
+        async for msg in channel.history(limit=500, oldest_first=True):
+            lines = []
+            for m in [msg] if not msg.embeds else [msg] + [None]:
+                if m:
+                    ts = m.created_at.strftime("%H:%M")
+                    name = m.author.display_name if m.author else "Sistema"
+                    content = m.content or ""
+                    if m.attachments:
+                        content += " " + " ".join(a.url for a in m.attachments)
+                    lines.append(f"[{ts}] {name}: {content}")
+            messages.extend(lines)
+            for embed in msg.embeds:
+                lines = []
+                if embed.title:
+                    lines.append(f"[{msg.created_at.strftime('%H:%M')}] — {embed.title}")
+                if embed.description:
+                    lines.append(f"  {embed.description}")
+                if embed.fields:
+                    for f in embed.fields:
+                        lines.append(f"  {f.name}: {f.value}")
+                if embed.footer:
+                    lines.append(f"  └ {embed.footer.text}")
+                messages.extend(lines)
+
+        header = (
+            "══════════════════════════════════\n"
+            f"🎫 TRANSCRIPCIÓN DEL TICKET\n"
+            f"ID: {ticket_id}\n"
+            f"Canal: #{channel.name}\n"
+            f"Cerrado por ID: {closer_id}\n"
+            "══════════════════════════════════\n\n"
+        )
+        body = "\n".join(messages) if messages else "(sin mensajes)"
+        text = header + body
+
+        def make_file():
+            return discord.File(
+                fp=io.BytesIO(text.encode("utf-8")),
+                filename=f"ticket_{ticket_id}.txt"
+            )
+
+        closer = channel.guild.get_member(closer_id)
+        if closer:
+            try:
+                await closer.send(f"📄 **Transcript del ticket {ticket_id}**", file=make_file())
+            except Exception:
+                pass
+
+        creator = channel.guild.get_member(creator_id)
+        if creator:
+            try:
+                await creator.send(f"📄 **Transcript de tu ticket {ticket_id}**", file=make_file())
+            except Exception:
+                pass
+    except Exception:
+        pass
 
 
 class TicketCloseView(discord.ui.View):
@@ -30,11 +92,11 @@ class TicketCloseView(discord.ui.View):
                     creator_id = int(interaction.channel.topic.split(":", 1)[1])
                 except ValueError:
                     pass
-            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in member.roles)
+            has_role = any(role.id == TICKETS_ROLE_ID for role in member.roles)
             is_creator = member.id == creator_id
             if not has_role and not is_creator:
                 await interaction.response.send_message(
-                    "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
+                    "❌ Solo el creador del ticket o el staff de tickets puede cerrarlo.", ephemeral=True
                 )
                 return
             await interaction.response.defer()
@@ -42,6 +104,8 @@ class TicketCloseView(discord.ui.View):
                 await interaction.edit_original_response(view=None)
             except Exception:
                 pass
+            ticket_id = interaction.channel.name.upper()
+            await send_ticket_transcript(interaction.channel, creator_id, member.id, ticket_id)
             await interaction.channel.send(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {member.name} ({member.id})")
@@ -357,6 +421,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             if not guild:
                 await interaction.response.send_message("❌ Este comando solo funciona en un servidor.", ephemeral=True)
                 return
+            await interaction.response.defer(ephemeral=True)
             detalle_completo = self.detalle.value
             if self.plazo.value:
                 detalle_completo += f"\n\n**Plazo:** {self.plazo.value}"
@@ -364,7 +429,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
             if created:
                 await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
                 ephemeral=True
             )
@@ -414,10 +479,10 @@ class Tickets(commands.Cog):
             except Exception:
                 pass
 
-    @app_commands.command(name="close", description="Cierra el ticket actual (solo admins o creador)")
+    @app_commands.command(name="close", description="Cierra el ticket actual (solo staff de tickets o creador)")
     async def close(self, interaction: discord.Interaction):
         try:
-            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
+            has_role = any(role.id == TICKETS_ROLE_ID for role in interaction.user.roles)
             creator_id = 0
             if interaction.channel.topic and interaction.channel.topic.startswith("creator:"):
                 try:
@@ -427,11 +492,18 @@ class Tickets(commands.Cog):
             if not has_role and interaction.user.id != creator_id:
                 await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
                 return
-            await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
+            ticket_id = interaction.channel.name.upper()
+            await send_ticket_transcript(interaction.channel, creator_id, interaction.user.id, ticket_id)
+            await interaction.followup.send(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}", ephemeral=True)
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {interaction.user.name} ({interaction.user.id})")
         except Exception:
-            pass
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("❌ Error al cerrar el ticket.", ephemeral=True)
+            except Exception:
+                pass
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
