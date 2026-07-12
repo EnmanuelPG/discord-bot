@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import asyncio
+import random
+import string
 import re
 
 PEDIDOS_CHANNEL_ID = 1524947903775375551
@@ -163,9 +165,61 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
     await pedidos_channel.send(f"📌 **Canal del ticket:** {ticket_channel.mention}")
 
 
+class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
+    servicio = discord.ui.TextInput(
+        label="¿Qué servicio necesitas?",
+        placeholder="Bot de Discord, Pagina Web, Diseño Gráfico, Bot de Minecraft...",
+        max_length=50
+    )
+    detalle = discord.ui.TextInput(
+        label="Cuéntanos sobre tu proyecto",
+        style=discord.TextStyle.paragraph,
+        placeholder="Describe tu idea, funcionalidades, lo que necesitas...",
+        max_length=1000
+    )
+    plazo = discord.ui.TextInput(
+        label="¿Tienes algún plazo límite?",
+        placeholder="Ej: 1 semana, no hay prisa, lo antes posible...",
+        max_length=200,
+        required=False
+    )
+    pago = discord.ui.TextInput(
+        label="¿Cuál es tu método de pago?",
+        placeholder="PayPal, Crypto, Transferencia, etc.",
+        max_length=200
+    )
+
+    def __init__(self, bot):
+        super().__init__()
+        self.bot = bot
+
+    async def on_submit(self, interaction: discord.Interaction):
+        ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        username = interaction.user.name
+        guild = interaction.guild
+        if not guild:
+            await interaction.response.send_message("❌ Este comando solo funciona en un servidor.", ephemeral=True)
+            return
+        detalle_completo = self.detalle.value
+        if self.plazo.value:
+            detalle_completo += f"\n\n**Plazo:** {self.plazo.value}"
+        dummy_embed = discord.Embed(title=f"📦 {self.servicio.value}")
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username)
+        if created:
+            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
+        await interaction.response.send_message(
+            f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
+            ephemeral=True
+        )
+
+
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(name="pedido", description="Solicita un servicio y crea un ticket")
+    async def pedido(self, interaction: discord.Interaction):
+        await interaction.response.send_modal(PedidoModal(self.bot))
 
     @app_commands.command(name="close", description="Cierra el ticket actual (solo admins o creador)")
     async def close(self, interaction: discord.Interaction):
