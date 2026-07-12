@@ -152,13 +152,24 @@ class TicketView(discord.ui.View):
             creator_id = self._get_creator_from_topic(interaction.channel)
             if not creator_id:
                 creator_id = self.creator_id
-            is_staff = self._is_staff(member)
+            claimed_id = self._get_claimed_from_topic(interaction.channel)
             is_creator = member.id == creator_id
-            if not is_staff and not is_creator:
-                await interaction.response.send_message(
-                    "❌ Solo el creador del ticket o el staff puede cerrarlo.", ephemeral=True
-                )
-                return
+            if claimed_id:
+                is_claimer = member.id == claimed_id
+                if not is_claimer and not is_creator:
+                    claimer = interaction.guild.get_member(claimed_id)
+                    name = claimer.display_name if claimer else str(claimed_id)
+                    await interaction.response.send_message(
+                        f"❌ Este ticket está reclamado por **{name}**. Solo {name} o el creador pueden cerrarlo.", ephemeral=True
+                    )
+                    return
+            else:
+                is_staff = self._is_staff(member)
+                if not is_staff and not is_creator:
+                    await interaction.response.send_message(
+                        "❌ Solo el creador del ticket o el staff puede cerrarlo.", ephemeral=True
+                    )
+                    return
             await interaction.response.defer()
             try:
                 await interaction.edit_original_response(view=None)
@@ -542,8 +553,8 @@ class Tickets(commands.Cog):
     @app_commands.command(name="close", description="Cierra el ticket actual (solo staff o creador)")
     async def close(self, interaction: discord.Interaction):
         try:
-            has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
             creator_id = 0
+            claimed_id = 0
             if interaction.channel.topic:
                 for part in interaction.channel.topic.split("|"):
                     if part.startswith("creator:"):
@@ -551,9 +562,27 @@ class Tickets(commands.Cog):
                             creator_id = int(part.split(":", 1)[1])
                         except ValueError:
                             pass
-            if not has_role and interaction.user.id != creator_id:
-                await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
-                return
+                    elif part.startswith("claimed:"):
+                        try:
+                            val = part.split(":", 1)[1]
+                            claimed_id = int(val) if val else 0
+                        except ValueError:
+                            pass
+            is_creator = interaction.user.id == creator_id
+            if claimed_id:
+                is_claimer = interaction.user.id == claimed_id
+                if not is_claimer and not is_creator:
+                    claimer = interaction.guild.get_member(claimed_id)
+                    name = claimer.display_name if claimer else str(claimed_id)
+                    await interaction.response.send_message(
+                        f"❌ Este ticket está reclamado por **{name}**. Solo {name} o el creador pueden cerrarlo.", ephemeral=True
+                    )
+                    return
+            else:
+                has_role = any(role.id in (DEVELOPER_ROLE_ID, TICKETS_ROLE_ID) for role in interaction.user.roles)
+                if not has_role and not is_creator:
+                    await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
+                    return
             await interaction.response.defer(ephemeral=True)
             ticket_id = interaction.channel.name.upper()
             await send_ticket_transcript(interaction.channel, creator_id, interaction.user.id, ticket_id)
