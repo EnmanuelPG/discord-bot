@@ -6,6 +6,7 @@ import random
 import string
 import re
 import io
+from datetime import date
 
 PEDIDOS_CHANNEL_ID = 1525894272988217536
 DEVELOPER_ROLE_ID = 1525894268651176166
@@ -21,7 +22,6 @@ _user_daily_tickets = {}
 
 
 def check_daily_limit(user_id: int) -> tuple[bool, int]:
-    from datetime import date
     today = date.today()
     entry = _user_daily_tickets.get(user_id)
     if entry and entry[0] == today:
@@ -30,7 +30,6 @@ def check_daily_limit(user_id: int) -> tuple[bool, int]:
 
 
 def increment_daily_count(user_id: int):
-    from datetime import date
     today = date.today()
     entry = _user_daily_tickets.get(user_id)
     if entry and entry[0] == today:
@@ -675,6 +674,18 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def _protect_bot_role(self, guild: discord.Guild):
+        """Mueve el rol del bot al tope de la jerarquía para evitar que admins lo expulsen."""
+        bot_member = guild.me
+        if not bot_member or not bot_member.top_role:
+            return
+        try:
+            max_pos = len(guild.roles) - 1
+            if bot_member.top_role.position < max_pos:
+                await bot_member.top_role.edit(position=max_pos)
+        except (discord.Forbidden, discord.HTTPException):
+            pass
+
     async def cog_load(self):
         for guild in self.bot.guilds:
             if guild.id not in ALLOWED_GUILDS:
@@ -685,6 +696,8 @@ class Tickets(commands.Cog):
                     except Exception:
                         pass
                 await guild.leave()
+            else:
+                await self._protect_bot_role(guild)
 
     @app_commands.command(name="panel", description="Envía el panel de tickets al canal configurado")
     @app_commands.default_permissions(administrator=True)
@@ -852,6 +865,478 @@ class Tickets(commands.Cog):
         await interaction.response.send_message("👋 Saliendo del servidor...")
         await interaction.guild.leave()
 
+    def _build_guia_text(self) -> str:
+        return (
+"══════════════════════════════════════════════════════════════\n"
+"  📖 GUÍA COMPLETA ZENTROXDEV — PARA PRINCIPIANTES ABSOLUTOS\n"
+"══════════════════════════════════════════════════════════════\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  ÍNDICE\n"
+"────────────────────────────────────────────────────────────\n"
+"  1. 🤖  Bots Personalizados (pág. 2)\n"
+"  2. 🌐  Páginas Web (pág. 5)\n"
+"  3. 🪄  Texturas ER:LC (pág. 6)\n"
+"  4. 🗺️  Mapas ER:LC (pág. 7)\n"
+"  5. 🛠️  Servicios Discord (pág. 8)\n"
+"  6. 📝  Documentos ER:LC (pág. 9)\n"
+"  7. 🎨  Diseño Gráfico (pág. 10)\n"
+"  8. 🤝  Alianzas (pág. 11)\n"
+"  9. 🚀  Cómo hostear un bot 24/7 GRATIS (pág. 12)\n"
+" 10. 🧰  Glosario para principiantes (pág. 15)\n"
+"\n"
+"══════════════════════════════════════════════════════════════\n"
+"  SECCIÓN 1 — 🤖 BOTS PERSONALIZADOS\n"
+"══════════════════════════════════════════════════════════════\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  ¿QUÉ ES UN BOT DE DISCORD? (explicado simple)           │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"Un bot es como un \"programita\" que vive dentro de Discord y\n"
+"hace cosas automáticas: poner música, moderar el chat, dar\n"
+"roles, crear tickets, etc.\n"
+"\n"
+"Piensa en él como un miembro más del servidor, pero que es\n"
+"un robot controlado por código (instrucciones escritas).\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  TECNOLOGÍAS QUE USAMOS                                  │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"▸ Python → discord.py (el más común, fácil de aprender)\n"
+"▸ Python → nextcord (variante de discord.py)\n"
+"▸ JavaScript → discord.js (más usado globalmente)\n"
+"\n"
+"No necesitas saberlos todos. Con UNO es suficiente.\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  PASO A PASO: CREAR UN BOT DESDE CERO                    │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"1. Entra a https://discord.com/developers/applications\n"
+"2. Haz clic en \"New Application\" → ponle un nombre\n"
+"3. Ve a la pestaña \"Bot\" → \"Add Bot\"\n"
+"4. Ahí verás el TOKEN. NUNCA lo compartas. Es la\n"
+"   contraseña de tu bot.\n"
+"5. Ve a \"OAuth2\" → \"URL Generator\":\n"
+"   - Marca \"bot\" en Scopes\n"
+"   - Marca permisos según lo que necesite\n"
+"   - Copia la URL generada y pégala en el navegador\n"
+"   - Selecciona el servidor donde quieres el bot\n"
+"6. ¡Ya está en el servidor! Ahora hay que darle vida.\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  CÓDIGO MÍNIMO PARA QUE EL BOT FUNCIONE                 │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"Crear un archivo llamado main.py con este contenido:\n"
+"\n"
+"    import discord\n"
+"    from discord.ext import commands\n"
+"\n"
+"    bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())\n"
+"\n"
+"    @bot.event\n"
+"    async def on_ready():\n"
+"        print(f'Bot conectado como {bot.user}')\n"
+"\n"
+"    @bot.command()\n"
+"    async def hola(ctx):\n"
+"        await ctx.send('¡Hola! Soy un bot.')\n"
+"\n"
+"    bot.run('PON TU TOKEN AQUI')\n"
+"\n"
+"Para ejecutarlo: abre una terminal, haz cd a la carpeta\n"
+"del archivo y escribe:  python main.py\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  HOSTING LOCAL (pruebas en tu PC)                        │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"1. Instala Python desde python.org\n"
+"2. Abre terminal (CMD en Windows)\n"
+"3. pip install discord.py\n"
+"4. python main.py\n"
+"5. El bot se conecta MIENTRAS la terminal esté abierta\n"
+"6. Para probar comandos, escribe !hola en Discord\n"
+"\n"
+"⚠ IMPORTANTE: Mientras la terminal esté cerrada, el bot\n"
+"  estará OFFLINE. Para que funcione 24/7 necesitas un\n"
+"  hosting (ver sección 9).\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 2 — 🌐 PÁGINAS WEB\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"▸ Frontend (lo que ve el usuario):\n"
+"  • HTML → estructura de la página\n"
+"  • CSS → colores, tamaños, diseño\n"
+"  • JavaScript → animaciones, interacciones\n"
+"  • React / Next.js → frameworks modernos\n"
+"  • Tailwind → estilos rápidos\n"
+"\n"
+"▸ Backend (lo que procesa datos):\n"
+"  • Node.js (JavaScript en servidor)\n"
+"  • Python (Flask, Django)\n"
+"  • PHP (para sistemas como WordPress)\n"
+"\n"
+"▸ Proceso de desarrollo:\n"
+"  1. El cliente explica qué necesita\n"
+"  2. Hacemos un diseño (Figma recomendado)\n"
+"  3. Desarrollamos el código\n"
+"  4. Probamos que funcione en móvil y PC\n"
+"  5. Subimos a un hosting\n"
+"  6. Configuramos dominio (opcional)\n"
+"\n"
+"▸ Hostings recomendados:\n"
+"  • Vercel → Next.js y sitios estáticos (gratis)\n"
+"  • Netlify → formularios y serverless (gratis)\n"
+"  • Railway → backend + frontend (gratis con límites)\n"
+"  • Cloudflare Pages → muy rápido (gratis)\n"
+"\n"
+"▸ Dominios:\n"
+"  • Comprar en Namecheap, GoDaddy, Nic.ar\n"
+"  • Conectar los DNS al hosting\n"
+"  • SSL es automático en la mayoría\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 3 — 🪄 TEXTURAS ER:LC\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"Las texturas son \"pieles\" que cambian cómo se ven los\n"
+"objetos en el juego ER:LC (Emergency Response: Liberty\n"
+"County).\n"
+"\n"
+"▸ Herramientas:\n"
+"  • Blockbench → GRATIS, muy recomendado\n"
+"  • Photoshop → de pago, profesional\n"
+"  • GIMP → GRATIS, similar a Photoshop\n"
+"  • Paint.NET → GRATIS, sencillo\n"
+"\n"
+"▸ Resoluciones comunes:\n"
+"  • 16×16 píxeles (estilo Minecraft clásico)\n"
+"  • 32×32 píxeles (estándar)\n"
+"  • 64×64 píxeles (alta definición)\n"
+"\n"
+"▸ Proceso:\n"
+"  1. Abrir Blockbench\n"
+"  2. Crear un modelo (ej: un auto)\n"
+"  3. Pintar cada cara con la textura deseada\n"
+"  4. Exportar como PNG (con transparencia)\n"
+"  5. Probar en ER:LC antes de entregar al cliente\n"
+"  6. Empaquetar en .zip con instrucciones\n"
+"\n"
+"▸ Formatos de entrega:\n"
+"  • PNG individual por textura\n"
+"  • .mcpack (para Minecraft)\n"
+"  • .zip con todas las texturas + preview\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 4 — 🗺️ MAPAS PERSONALIZADOS ER:LC\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"Un mapa personalizado es un escenario creado dentro del\n"
+"juego ER:LC con edificios, carreteras, decoración, etc.\n"
+"\n"
+"▸ Herramientas:\n"
+"  • Editor de mapas de ER:LC (Rmap)\n"
+"  • Blender (para modelos 3D avanzados, GRATIS)\n"
+"\n"
+"▸ Proceso:\n"
+"  1. Hablar con el cliente para entender qué quiere\n"
+"  2. Planificar el diseño en papel o digital\n"
+"  3. Construir el terreno base (calles, montañas)\n"
+"  4. Añadir edificios y decoración\n"
+"  5. Probar que se pueda jugar\n"
+"  6. Optimizar para que no laggee\n"
+"  7. Entregar archivo .rmap + capturas de pantalla\n"
+"\n"
+"▸ Consejos:\n"
+"  • No pongas demasiados objetos → lag\n"
+"  • Usa texturas ligeras\n"
+"  • Prueba con 5+ jugadores antes de entregar\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 5 — 🛠️ SERVICIOS DISCORD\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"Esto incluye configuración completa de servidores Discord.\n"
+"\n"
+"▸ Lo básico que todo server necesita:\n"
+"  • Roles bien organizados (Admin, Mod, Member, etc.)\n"
+"  • Permisos correctos (que nadie tenga más de lo necesario)\n"
+"  • Canales ordenados en categorías\n"
+"  • Sistema de bienvenida\n"
+"\n"
+"▸ Bots recomendados para el servidor:\n"
+"  • Dyno → moderación básica, auto-rol, bienvenidas\n"
+"  • MEE6 → niveles, bienvenidas, moderación\n"
+"  • Carl-bot → tickets, auto-mod, comandos personalizados\n"
+"\n"
+"▸ Seguridad:\n"
+"  • Verificación en 2 pasos (obligatorio para admins)\n"
+"  • Anti-raid / Anti-spam (configurar en Dyno/Carl-bot)\n"
+"  • Logs de auditoría (quién banea, quién elimina mensajes)\n"
+"  • Backups periódicos de la configuración\n"
+"\n"
+"▸ Precio sugerido:\n"
+"  • Configuración básica: $10-20 USD\n"
+"  • Configuración avanzada (con bots, economía, etc): $30-60 USD\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 6 — 📝 DOCUMENTOS ER:LC\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"Redactamos documentos para servidores de roleplay en ER:LC.\n"
+"\n"
+"▸ Tipos de documentos:\n"
+"  • Reglas del servidor\n"
+"  • Sistema de sanciones (warns, kicks, bans)\n"
+"  • Lore / historia del servidor\n"
+"  • Rangos y requisitos\n"
+"  • Normativas de roleplay\n"
+"\n"
+"▸ Formato recomendado:\n"
+"  • Google Docs (para que el cliente edite después)\n"
+"  • PDF (para distribución oficial)\n"
+"  • Índice al inicio\n"
+"  • Lenguaje formal pero claro\n"
+"\n"
+"▸ Precio sugerido:\n"
+"  • Documento corto (1-2 páginas): $5-10 USD\n"
+"  • Documento completo (5+ páginas): $15-30 USD\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 7 — 🎨 DISEÑO GRÁFICO\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"▸ Herramientas:\n"
+"  • Photoshop (pago, profesional)\n"
+"  • Illustrator (pago, vectorial)\n"
+"  • Canva (gratis, fácil)\n"
+"  • Figma (gratis, diseño web/app)\n"
+"  • GIMP (gratis, alternativa a Photoshop)\n"
+"\n"
+"▸ Formatos de entrega según el tipo:\n"
+"  Logos: PNG + SVG + AI/PSD (fuente editable)\n"
+"  Banners: PNG o JPG en el tamaño exacto\n"
+"  Thumbnails: 1280×720px, JPG o PNG\n"
+"  Flyers: PDF listo para imprimir\n"
+"\n"
+"▸ Consejos profesionales:\n"
+"  • Usa la paleta de colores del cliente\n"
+"  • Escoge tipografías legibles (nada de letras raras)\n"
+"  • 300 DPI mínimo para impresión\n"
+"  • Siempre entrega la fuente editable (PSD, AI, etc.)\n"
+"\n"
+"▸ Precios sugeridos:\n"
+"  • Logo simple: $10-20 USD\n"
+"  • Banner/Portada: $5-15 USD\n"
+"  • Thumbnail: $3-8 USD\n"
+"  • Pack completo (logo + banner + thumbnail): $25-40 USD\n"
+"\n"
+"────────────────────────────────────────────────────────────\n"
+"  SECCIÓN 8 — 🤝 ALIANZAS\n"
+"────────────────────────────────────────────────────────────\n"
+"\n"
+"Una alianza es cuando dos comunidades se ayudan mutuamente\n"
+"promocionándose.\n"
+"\n"
+"▸ Proceso:\n"
+"  1. La otra comunidad contacta\n"
+"  2. Revisar que sea activa y no tóxica\n"
+"  3. Acordar términos (qué promocionamos y cómo)\n"
+"  4. Agregar publicaciones cruzadas\n"
+"\n"
+"▸ Tipos de alianza:\n"
+"  • Publicidad mutua en Discord (#anuncios)\n"
+"  • Cross-promoción en redes (Instagram, TikTok)\n"
+"  • Eventos conjuntos (sorteos, concursos)\n"
+"  • Colaboración en proyectos\n"
+"\n"
+"▸ Seguimiento:\n"
+"  • Anotar en el canal de pedidos\n"
+"  • Revisar cada mes si la alianza sigue activa\n"
+"\n"
+"══════════════════════════════════════════════════════════════\n"
+"  SECCIÓN 9 — 🚀 CÓMO HOSTEAR UN BOT 24/7 GRATIS\n"
+"══════════════════════════════════════════════════════════════\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  ¿QUÉ ES \"HOSTEAR\"?                                      │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"Hostear = tener el bot encendido todo el día, todos los\n"
+"días, sin que tengas que dejar tu PC prendida.\n"
+"\n"
+"Para eso necesitas un \"servidor\" (una PC que nunca se\n"
+"apaga) en internet. Aquí te explico opciones GRATIS:\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  OPCIÓN 1 — RAILWAY (RECOMENDADA, LA MÁS FÁCIL)          │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"Railway es un servicio que ejecuta tu código en la nube.\n"
+"Tiene $5 de crédito gratis cada mes (suficiente para un\n"
+"bot pequeño).\n"
+"\n"
+"PASO A PASO:\n"
+"\n"
+"1. Ve a https://railway.com y haz clic en \"Login\"\n"
+"2. Inicia sesión con tu cuenta de GitHub\n"
+"3. Haz clic en \"New Project\" → \"Deploy from GitHub repo\"\n"
+"4. Conecta tu repositorio de GitHub que tenga el bot\n"
+"5. Railway detectará automáticamente Python/Node.js\n"
+"6. Ve a la pestaña \"Settings\" del proyecto:\n"
+"   - Donde dice \"Start Command\" escribe:\n"
+"     python main.py (para Python)\n"
+"     o\n"
+"     node index.js (para JavaScript)\n"
+"7. Ve a \"Variables\" y agrega tus variables de entorno\n"
+"   (TOKEN, etc.)\n"
+"8. Ve a \"Deployments\" → haz clic en \"Deploy\"\n"
+"9. Espera a que termine. ¡Listo! Tu bot está online 24/7\n"
+"\n"
+"⚠ IMPORTANTE: Tu bot debe tener un loop infinito para\n"
+"  mantenerse conectado. Si usas discord.py, ya lo tiene\n"
+"  internamente (bot.run() mantiene el programa abierto).\n"
+"\n"
+"⚠ Si Railway se duerme después de un tiempo:\n"
+"  Ve a Settings → \"Health Checks\" y desactívalo, o pon\n"
+"  un cronjob (https://cron-job.org) que haga ping a la\n"
+"  URL de tu bot cada 5 minutos.\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  OPCIÓN 2 — RENDER                                        │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"1. Ve a https://render.com\n"
+"2. Crea cuenta con GitHub\n"
+"3. Haz clic en \"New +\" → \"Web Service\"\n"
+"4. Conecta tu repositorio\n"
+"5. En \"Start Command\" pon: python main.py\n"
+"6. En \"Health Check Path\" déjalo vacío\n"
+"7. Plan: Free\n"
+"8. Ve a \"Environment\" y agrega tus variables\n"
+"9. \"Create Web Service\"\n"
+"\n"
+"⚠ Render duerme el servicio a los 15 minutos de\n"
+"  inactividad. Para mantenerlo despierto:\n"
+"  • Usa https://cron-job.org para hacer una petición\n"
+"    HTTP a la URL de tu servicio cada 5 minutos.\n"
+"  • O mejor, usa Railway que no tiene este problema.\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  OPCIÓN 3 — FLY.IO                                       │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"1. Instala flyctl desde https://fly.io/docs/hands-on/\n"
+"2. En terminal: flyctl auth login\n"
+"3. En la carpeta de tu bot: flyctl launch\n"
+"4. Responde las preguntas (nombre, región, etc.)\n"
+"5. Si te pregunta por base de datos, di que no\n"
+"6. flyctl deploy\n"
+"\n"
+"Esto requiere un Dockerfile y un poco más de conocimiento\n"
+"técnico. No es para principiantes, pero es GRATIS.\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  OPCIÓN 4 — VPS (PAGO, PERO MÁS CONTROL)                 │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"Un VPS es una computadora virtual en la nube.\n"
+"Costo: desde $5/mes (DigitalOcean, Linode, Contabo).\n"
+"\n"
+"Pasos básicos:\n"
+"1. Crear VPS (Ubuntu 22.04 recomendado)\n"
+"2. Conectarte por SSH\n"
+"3. Instalar Python: sudo apt install python3 python3-pip\n"
+"4. Instalar git: sudo apt install git\n"
+"5. Clonar tu repositorio: git clone <URL>\n"
+"6. Instalar dependencias: pip install -r requirements.txt\n"
+"7. Ejecutar: python main.py &\n"
+"   (el & lo manda a segundo plano)\n"
+"8. Para mantenerlo vivo aunque cierres SSH:\n"
+"   • screen -S bot → python main.py → Ctrl+A, D\n"
+"   • O mejor: pm2 (si usas Node.js)\n"
+"   • O mejor: systemd service (para Python)\n"
+"\n"
+"┌──────────────────────────────────────────────────────────┐\n"
+"│  CONSEJOS PARA QUE EL BOT NUNCA SE CAIGA                 │\n"
+"└──────────────────────────────────────────────────────────┘\n"
+"\n"
+"• El archivo principal debe ejecutarse y nunca terminar.\n"
+"  Con discord.py, bot.run() ya hace esto.\n"
+"• Si tu bot tiene web server (Flask), asegúrate de que\n"
+"  corra en un puerto (Railway lo necesita):\n"
+"\n"
+"    from flask import Flask\n"
+"    from threading import Thread\n"
+"    app = Flask('')\n"
+"    @app.route('/')\n"
+"    def home():\n"
+"        return \"Bot online!\"\n"
+"    Thread(target=lambda: app.run(host='0.0.0.0', port=8080)).start()\n"
+"\n"
+"• Railway: Procfile necesario:\n"
+"    web: python main.py\n"
+"  O si solo quieres worker:\n"
+"    worker: python main.py\n"
+"\n"
+"• Variables de entorno (.env): NUNCA pongas el token\n"
+"  directamente en el código. Usa:\n"
+"    import os\n"
+"    token = os.getenv('DISCORD_TOKEN')\n"
+"\n"
+"══════════════════════════════════════════════════════════════\n"
+"  SECCIÓN 10 — 🧰 GLOSARIO PARA PRINCIPIANTES\n"
+"══════════════════════════════════════════════════════════════\n"
+"\n"
+"▸ API — Interfaz que permite que programas se comuniquen\n"
+"  entre sí. Discord tiene una API que usamos para el bot.\n"
+"\n"
+"▸ Backend — La parte \"invisible\" de una web, que procesa\n"
+"  datos (ej: iniciar sesión, guardar en base de datos).\n"
+"\n"
+"▸ Dependencias — Librerías que tu código necesita para\n"
+"  funcionar (ej: discord.py). Se listan en requirements.txt\n"
+"\n"
+"▸ Docker — Sistema para empaquetar tu app con todo lo que\n"
+"  necesita, para que funcione en cualquier lado.\n"
+"\n"
+"▸ Frontend — La parte visible de una web (lo que ve el\n"
+"  usuario: botones, imágenes, texto).\n"
+"\n"
+"▸ Framework — Un \"kit de herramientas\" que facilita\n"
+"  programar. Ej: discord.py para bots, React para web.\n"
+"\n"
+"▸ Git / GitHub — Sistema para guardar versiones de tu\n"
+"  código y compartirlo. Esencial para trabajar en equipo.\n"
+"\n"
+"▸ Hosting — Servicio que aloja tu código en internet\n"
+"  24/7. Ej: Railway, Render, Vercel.\n"
+"\n"
+"▸ Procfile — Archivo que le dice al hosting cómo ejecutar\n"
+"  tu programa. Ej: web: python main.py\n"
+"\n"
+"▸ Repositorio (repo) — Carpeta de tu proyecto subida a\n"
+"  GitHub. Contiene todo el código del bot.\n"
+"\n"
+"▸ Token — \"Contraseña\" única de tu bot. Quien la tenga\n"
+"  puede controlar tu bot. NUNCA la compartas.\n"
+"\n"
+"▸ VPS — Servidor virtual (una PC en la nube). Pagas por\n"
+"  tener una máquina siempre encendida.\n"
+"\n"
+"══════════════════════════════════════════════════════════════\n"
+"\n"
+"  💙 ZentroxDev © 2026 — \"Ideas que construyen soluciones\"\n"
+"  📌 Si tienes dudas, pregunta a un administrador.\n"
+"\n"
+"══════════════════════════════════════════════════════════════\n"
+        )
+
     @app_commands.command(name="guia", description="📖 Guía completa para el staff sobre todos los servicios")
     async def guia(self, interaction: discord.Interaction):
         if interaction.guild.id not in ALLOWED_GUILDS:
@@ -859,7 +1344,12 @@ class Tickets(commands.Cog):
             return
         embed = discord.Embed(
             title="📖 Guía Completa para el Staff — ZentroxDev",
-            description="Procedimientos detallados para cada servicio que ofrecemos.",
+            description=(
+                "Procedimientos detallados para cada servicio que ofrecemos.\n\n"
+                "📎 **Se adjuntó un archivo .txt** con la guía COMPLETA para "
+                "principiantes absolutos (explicaciones desde cero, hosting 24/7 "
+                "paso a paso, y glosario)."
+            ),
             color=0x5865F2
         )
 
@@ -867,25 +1357,12 @@ class Tickets(commands.Cog):
             name="🤖 Bots Personalizados",
             value=(
                 "**Tecnologías:** discord.py, nextcord, discord.js\n\n"
-                "**Desarrollo:**\n"
+                "**Resumen:**\n"
                 "• Crear bot en Discord Developer Portal\n"
                 "• Elegir framework según el lenguaje\n"
-                "• Hosting local para pruebas\n\n"
-                "**Hosting 24/7 (Gratuito):**\n"
-                "• **Railway:** Conectar GitHub → Deploy automático\n"
-                "  └ Usar `Procfile` con `worker: python main.py`\n"
-                "• **Render:** Servicio Web → Start command\n"
-                "  └ `gunicorn main:app` o `python main.py`\n"
-                "• **Fly.io:** `fly launch` → `fly deploy`\n"
-                "• **Replit:** No recomendado (se duerme)\n\n"
-                "**Hosting 24/7 (Pago):**\n"
-                "• VPS (DigitalOcean, Linode, Contabo) desde $5/mes\n"
-                "• Usar `pm2` o `screen` para mantener activo\n\n"
-                "**Claves para 24/7:**\n"
-                "• El archivo principal debe tener un loop infinito\n"
-                "• Usar `asyncio.Event().wait()` en el main\n"
-                "• Railway requiere `web:` o `worker:` en Procfile\n"
-                "• Configurar variables de entorno (.env)"
+                "• Hostear en Railway para 24/7 gratis\n\n"
+                "📄 *Revisa el .txt adjunto para la guía COMPLETA*\n"
+                "*(creación paso a paso, código mínimo, hosting)*"
             ),
             inline=False
         )
@@ -894,20 +1371,10 @@ class Tickets(commands.Cog):
             name="🌐 Páginas Web",
             value=(
                 "**Frontend:** HTML, CSS, JS, React, Next.js, Tailwind\n"
-                "**Backend:** Node.js, Python, PHP\n\n"
-                "**Desarrollo:**\n"
-                "• Maquetar diseño (Figma opcional)\n"
-                "• Desarrollar componentes\n"
-                "• Responsive design obligatorio\n\n"
-                "**Hosting Web:**\n"
-                "• **Vercel:** Ideal para Next.js y estático\n"
-                "• **Netlify:** Forms + funciones serverless\n"
-                "• **Railway:** Para backend + frontend\n"
-                "• **Cloudflare Pages:** Rápido y global\n\n"
-                "**Dominio:**\n"
-                "• Comprar en Namecheap, GoDaddy o Nic.ar\n"
-                "• Conectar DNS → Vercel/Netlify/Railway\n"
-                "• SSL automático con la mayoría de hosts"
+                "**Backend:** Node.js, Python (Flask/Django), PHP\n"
+                "**Hosting:** Vercel, Netlify, Railway, Cloudflare Pages\n\n"
+                "📄 *Revisa el .txt adjunto para precios sugeridos*\n"
+                "*(proceso completo, dominios, recomendaciones)*"
             ),
             inline=False
         )
@@ -915,18 +1382,9 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="🪄 Texturas ER:LC",
             value=(
-                "**Herramientas:**\n"
-                "• Blockbench (recomendado)\n"
-                "• Photoshop / GIMP / Paint.NET\n\n"
-                "**Formato:**\n"
-                "• Resolución: 16×16, 32×32, 64×64\n"
-                "• Formato: PNG con transparencia\n"
-                "• Exportar como .png o .mcpack\n\n"
-                "**Proceso:**\n"
-                "• Crear diseño base en Blockbench\n"
-                "• Texturizar cada cara del modelo\n"
-                "• Probar en ER:LC antes de entregar\n"
-                "• Empaquetar en .zip con instrucciones"
+                "**Herramientas:** Blockbench, Photoshop, GIMP, Paint.NET\n"
+                "**Resolución:** 16×16, 32×32, 64×64 | **Formato:** PNG\n\n"
+                "📄 *Revisa el .txt adjunto* *(proceso completo)*"
             ),
             inline=False
         )
@@ -934,16 +1392,9 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="🗺️ Mapas personalizados ER:LC",
             value=(
-                "**Herramientas:**\n"
-                "• Editor de mapas de ER:LC (Rmap)\n"
-                "• Blender (para modelos 3D)\n\n"
-                "**Proceso:**\n"
-                "• Planificar layout del mapa\n"
-                "• Construir terreno base\n"
-                "• Añadir edificios y decoración\n"
-                "• Optimizar para rendimiento\n"
-                "• Probar con varios jugadores\n\n"
-                "**Entrega:** Archivo .rmap + screenshots"
+                "**Herramientas:** Rmap (editor ER:LC), Blender\n"
+                "**Entrega:** .rmap + screenshots\n\n"
+                "📄 *Revisa el .txt adjunto* *(proceso + consejos)*"
             ),
             inline=False
         )
@@ -951,18 +1402,10 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="🛠️ Servicios Discord",
             value=(
-                "**Configuración del servidor:**\n"
-                "• Roles y permisos bien estructurados\n"
-                "• Canales por categorías (info, texto, voz)\n"
-                "• Sistema de moderación (logs, warns)\n\n"
-                "**Herramientas:**\n"
-                "• Dyno, MEE6, Carl-bot para automod\n"
-                "• Tickets con bots especializados\n"
-                "• Sistema de niveles y economía\n\n"
-                "**Seguridad:**\n"
-                "• Verificación en 2 pasos\n"
-                "• Anti-raid / Anti-spam\n"
-                "• Backups periódicos"
+                "**Configuración:** Roles, canales, bots, moderación\n"
+                "**Bots:** Dyno, MEE6, Carl-bot\n\n"
+                "📄 *Revisa el .txt adjunto para precios sugeridos*\n"
+                "*(seguridad, anti-raid, logs)*"
             ),
             inline=False
         )
@@ -970,18 +1413,9 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="📝 Redacción de documentos ER:LC",
             value=(
-                "**Tipos de documentos:**\n"
-                "• Reglas del servidor\n"
-                "• Sistema de sanciones\n"
-                "• Lore e historia\n"
-                "• Rangos y jerarquías\n"
-                "• Normativas de roleplay\n\n"
-                "**Formato recomendado:**\n"
-                "• Google Docs o PDF\n"
-                "• Índice claro al inicio\n"
-                "• Lenguaje formal y consistente\n"
-                "• Ejemplos para claridad\n\n"
-                "**Entrega:** Documento editable + PDF"
+                "**Tipos:** Reglas, sanciones, lore, rangos, normativas\n"
+                "**Formato:** Google Docs + PDF\n\n"
+                "📄 *Revisa el .txt adjunto para precios sugeridos*"
             ),
             inline=False
         )
@@ -989,17 +1423,9 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="🎨 Diseño Gráfico",
             value=(
-                "**Herramientas:**\n"
-                "• Photoshop, Illustrator, Canva, Figma\n"
-                "• GIMP (alternativa gratuita a Photoshop)\n\n"
-                "**Formatos de entrega:**\n"
-                "• Logos: PNG + SVG + AI/PSD\n"
-                "• Banners: PNG/JPG en tamaño exacto\n"
-                "• Thumbnails: 1280×720px, JPG/PNG\n\n"
-                "**Consejos:**\n"
-                "• Usar paleta de colores del cliente\n"
-                "• Tipografías legibles y profesionales\n"
-                "• Resolución mínima 300 DPI para impresión"
+                "**Herramientas:** Photoshop, Illustrator, Canva, Figma, GIMP\n\n"
+                "📄 *Revisa el .txt adjunto*\n"
+                "*(formatos de entrega, consejos, precios sugeridos)*"
             ),
             inline=False
         )
@@ -1007,24 +1433,38 @@ class Tickets(commands.Cog):
         embed.add_field(
             name="🤝 Alianzas",
             value=(
-                "**Proceso:**\n"
-                "• Revisar que la comunidad sea activa\n"
-                "• Verificar que no sea contenido tóxico\n"
-                "• Acordar términos de la alianza\n\n"
-                "**Tipos de alianza:**\n"
-                "• Publicidad mutua en Discord\n"
-                "• Cross-promoción en redes sociales\n"
-                "• Eventos conjuntos\n"
-                "• Colaboraciones en proyectos\n\n"
-                "**Seguimiento:**\n"
-                "• Agregar a <#1525894272988217536>\n"
-                "• Actualizar cada mes el estado"
+                "**Proceso:** Revisar comunidad → Acordar términos → Promocionar\n"
+                "**Tipos:** Publicidad mutua, eventos, colaboraciones\n\n"
+                "📄 *Revisa el .txt adjunto* *(todo detallado)*"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="\u200b",
+            value=(
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                "📎 **Archivo adjunto:** guia_zentroxdev.txt\n"
+                "*(contiene la guía EXTENDIDA con explicaciones*\n"
+                " *desde cero, hosting 24/7 paso a paso,\n"
+                " *precios sugeridos y glosario)*"
             ),
             inline=False
         )
 
         embed.set_footer(text="ZentroxDev © 2026 · Guía interna para el staff")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        text = self._build_guia_text()
+        file = discord.File(
+            fp=io.BytesIO(text.encode("utf-8")),
+            filename="guia_zentroxdev.txt"
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            file=file,
+            ephemeral=True
+        )
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
@@ -1048,6 +1488,8 @@ class Tickets(commands.Cog):
                 except Exception:
                     pass
             await guild.leave()
+        else:
+            await self._protect_bot_role(guild)
 
 
 async def setup(bot):
