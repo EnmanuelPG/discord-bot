@@ -185,33 +185,33 @@ class TicketPanelView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="🤖 Bot de Discord", style=discord.ButtonStyle.primary, custom_id="panel_bot_discord", row=0)
-    async def btn_bot_discord(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Bot de Discord")
+    @discord.ui.button(label="🤖 Bots Personalizados", style=discord.ButtonStyle.primary, custom_id="panel_bots", row=0)
+    async def btn_bots(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Bots Personalizados")
 
-    @discord.ui.button(label="🌐 Página Web", style=discord.ButtonStyle.primary, custom_id="panel_web", row=0)
+    @discord.ui.button(label="🌐 Páginas Web", style=discord.ButtonStyle.primary, custom_id="panel_web", row=0)
     async def btn_web(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Página Web")
+        await self._create_ticket(interaction, "Páginas Web")
 
-    @discord.ui.button(label="🎨 Diseño Gráfico", style=discord.ButtonStyle.success, custom_id="panel_diseno", row=1)
+    @discord.ui.button(label="🪄 Texturas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_texturas", row=1)
+    async def btn_texturas(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Texturas de ER:LC")
+
+    @discord.ui.button(label="🗺️ Mapas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_mapas", row=1)
+    async def btn_mapas(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Mapas personalizados ER:LC")
+
+    @discord.ui.button(label="🛠️ Servicios Discord", style=discord.ButtonStyle.secondary, custom_id="panel_discord", row=2)
+    async def btn_discord(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Servicios de Discord")
+
+    @discord.ui.button(label="📝 Documentos ER:LC", style=discord.ButtonStyle.secondary, custom_id="panel_documentos", row=2)
+    async def btn_documentos(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Redacción de documentos ER:LC")
+
+    @discord.ui.button(label="🎨 Diseño Gráfico", style=discord.ButtonStyle.danger, custom_id="panel_diseno", row=3)
     async def btn_diseno(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Diseño Gráfico")
-
-    @discord.ui.button(label="⛏️ Bot de Minecraft", style=discord.ButtonStyle.success, custom_id="panel_bot_mc", row=1)
-    async def btn_bot_mc(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Bot de Minecraft")
-
-    @discord.ui.button(label="📜 Scripts", style=discord.ButtonStyle.secondary, custom_id="panel_scripts", row=2)
-    async def btn_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Scripts")
-
-    @discord.ui.button(label="⚙️ Configuración", style=discord.ButtonStyle.secondary, custom_id="panel_config", row=2)
-    async def btn_config(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Configuración")
-
-    @discord.ui.button(label="💬 Soporte", style=discord.ButtonStyle.danger, custom_id="panel_soporte", row=3)
-    async def btn_soporte(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._create_ticket(interaction, "Soporte")
+        await self._create_ticket(interaction, "Diseño gráfico")
 
     async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
         guild = interaction.guild
