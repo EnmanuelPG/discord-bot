@@ -14,6 +14,28 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
+CREATOR_ID = 1257780268719411260
+MAX_TICKETS_PER_DAY = 3
+_user_daily_tickets = {}
+
+
+def check_daily_limit(user_id: int) -> tuple[bool, int]:
+    from datetime import date
+    today = date.today()
+    entry = _user_daily_tickets.get(user_id)
+    if entry and entry[0] == today:
+        return entry[1] < MAX_TICKETS_PER_DAY, entry[1]
+    return True, 0
+
+
+def increment_daily_count(user_id: int):
+    from datetime import date
+    today = date.today()
+    entry = _user_daily_tickets.get(user_id)
+    if entry and entry[0] == today:
+        _user_daily_tickets[user_id] = (today, entry[1] + 1)
+    else:
+        _user_daily_tickets[user_id] = (today, 1)
 
 
 async def send_ticket_transcript(channel, creator_id, closer_id, ticket_id):
@@ -322,18 +344,56 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
 
 
 PANEL_EMBED = discord.Embed(
-    title="Servicios 𝐓𝐢𝐜𝐤𝐞𝐭𝐬 [𝒁𝒆𝒏𝒕𝒓𝒐𝒙𝑫𝒆𝒗]",
+    title="╔═══════ 𝐓𝐢𝐜𝐤𝐞𝐭𝐬 ═══════╗",
     description=(
-        "👋 ¡Bienvenido al sistema de tickets de **ZentroxDev**!\n\n"
-        "Selecciona una categoría abajo según el servicio que necesites.\n"
-        "Al hacer clic se creará un canal privado donde solo tú y nuestro "
-        "equipo podrán ver y responder.\n\n"
-        "📝 **Dentro del ticket** te pediremos los detalles de tu proyecto "
-        "para poder ayudarte mejor."
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "**✨ ¡Bienvenido a ZentroxDev!**\n\n"
+        "Selecciona el servicio que deseas contratar y crearemos un "
+        "canal privado para ti.\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
     ),
-    color=0x3b82f6
+    color=0x5865F2
 )
-PANEL_EMBED.set_footer(text="ZentroxDev © 2026 · Sistema de Tickets")
+PANEL_EMBED.add_field(
+    name="🤖 **Desarrollo**",
+    value=(
+        "`▸` Bots personalizados para Discord, Minecraft y más\n"
+        "`▸` Páginas web y sistemas a medida\n"
+        "`▸` Integraciones y automatizaciones"
+    ),
+    inline=False
+)
+PANEL_EMBED.add_field(
+    name="🎮 **ER:LC**",
+    value=(
+        "`▸` Texturas y diseños exclusivos\n"
+        "`▸` Mapas personalizados\n"
+        "`▸` Redacción de documentos y normativas"
+    ),
+    inline=False
+)
+PANEL_EMBED.add_field(
+    name="🛡️ **Comunidad**",
+    value=(
+        "`▸` Configuración y moderación de servidores Discord\n"
+        "`▸` Diseño gráfico (logos, banners, thumbnails)\n"
+        "`▸` Alianzas y servidores educados"
+    ),
+    inline=False
+)
+PANEL_EMBED.add_field(
+    name="\u200b",
+    value=(
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📌 **Al hacer clic en un botón** se creará un canal privado\n"
+        "donde solo tú y nuestro equipo podrán ver y responder.\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "⚡ **Límite:** 3 tickets por usuario al día\n"
+        "📄 Recibirás una copia del ticket al cerrarse"
+    ),
+    inline=False
+)
+PANEL_EMBED.set_footer(text="ZentroxDev © 2026 · Calidad y compromiso")
 
 
 class TicketPanelView(discord.ui.View):
@@ -405,7 +465,20 @@ class TicketPanelView(discord.ui.View):
             except Exception:
                 pass
 
-    @discord.ui.button(label="📝 Documentos ER:LC", style=discord.ButtonStyle.secondary, custom_id="panel_documentos", row=2)
+    @discord.ui.button(label="🤝 Alianza", style=discord.ButtonStyle.secondary, custom_id="panel_alianza", row=2)
+    async def btn_alianza(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await self._create_ticket(interaction, "Alianza")
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
+
+    @discord.ui.button(label="📝 Documentos ER:LC", style=discord.ButtonStyle.secondary, custom_id="panel_documentos", row=3)
     async def btn_documentos(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await self._create_ticket(interaction, "Redacción de documentos ER:LC")
@@ -436,6 +509,12 @@ class TicketPanelView(discord.ui.View):
         if not guild:
             await interaction.response.send_message("❌ Esto solo funciona en un servidor.", ephemeral=True)
             return
+        allowed, used = check_daily_limit(interaction.user.id)
+        if not allowed:
+            await interaction.response.send_message(
+                f"❌ Ya has usado tus **{MAX_TICKETS_PER_DAY} tickets** hoy. Vuelve mañana.", ephemeral=True
+            )
+            return
         await interaction.response.defer(ephemeral=True)
         ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
         dummy_embed = discord.Embed(title=f"📦 {service_name}")
@@ -452,6 +531,7 @@ class TicketPanelView(discord.ui.View):
               "\n".join(f"{q}" for q in questions) + \
               "\n\nUn miembro del equipo te atenderá en breve. 💙"
         await ticket_channel.send(msg)
+        increment_daily_count(interaction.user.id)
         await interaction.followup.send(
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
             ephemeral=True
@@ -514,6 +594,14 @@ SERVICE_QUESTIONS = {
         "⏰ **¿Cuál es tu plazo límite?**",
         "💳 **¿Cuál es tu método de pago preferido?**",
     ],
+    "Alianza": [
+        "🤝 **¿De qué trata tu servidor o comunidad?**",
+        "📋 **¿Qué tipo de alianza buscas?** (Publicidad mutua, eventos conjuntos, colaboración...)",
+        "👥 **¿Cuántos miembros tiene tu comunidad?**",
+        "🌐 **¿Tienes servidor de Discord o redes sociales?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
 }
 
 
@@ -553,6 +641,12 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             if not guild:
                 await interaction.response.send_message("❌ Este comando solo funciona en un servidor.", ephemeral=True)
                 return
+            allowed, used = check_daily_limit(interaction.user.id)
+            if not allowed:
+                await interaction.response.send_message(
+                    f"❌ Ya has usado tus **{MAX_TICKETS_PER_DAY} tickets** hoy. Vuelve mañana.", ephemeral=True
+                )
+                return
             await interaction.response.defer(ephemeral=True)
             detalle_completo = self.detalle.value
             if self.plazo.value:
@@ -560,6 +654,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             dummy_embed = discord.Embed(title=f"📦 {self.servicio.value}")
             ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
             if created:
+                increment_daily_count(interaction.user.id)
                 await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
             await interaction.followup.send(
                 f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
@@ -736,6 +831,23 @@ class Tickets(commands.Cog):
         await message.channel.send(
             f"**Ticket {ticket_id}** creado -> {ticket_channel.mention}  |  {member_mention}"
         )
+
+    @app_commands.command(name="leave", description="[Creator only] Hace salir al bot del servidor")
+    async def leave(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
+            return
+        await interaction.response.send_message("👋 Saliendo del servidor...")
+        await interaction.guild.leave()
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        owner = self.bot.get_user(CREATOR_ID)
+        if owner:
+            try:
+                await owner.send(f"📤 El bot fue removido del servidor **{guild.name}** ({guild.id})")
+            except Exception:
+                pass
 
 
 async def setup(bot):

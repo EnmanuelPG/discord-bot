@@ -100,7 +100,7 @@ async def handle_verify_user(request):
     }))
 
 async def handle_create_order(request):
-    from cogs.tickets import create_ticket_channel, WEB_CATEGORY_ID
+    from cogs.tickets import create_ticket_channel, WEB_CATEGORY_ID, check_daily_limit, increment_daily_count, MAX_TICKETS_PER_DAY
     try:
         data = await request.json()
     except:
@@ -121,6 +121,12 @@ async def handle_create_order(request):
             "ok": False, "error": "USER_NOT_FOUND",
             "message": f"El usuario '{usuario}' no está en el servidor de Discord."
         }, status=400))
+    allowed, used = check_daily_limit(member.id)
+    if not allowed:
+        return cors_response(web.json_response({
+            "ok": False, "error": "LIMIT_REACHED",
+            "message": f"Ya has usado tus {MAX_TICKETS_PER_DAY} tickets hoy. Vuelve mañana."
+        }, status=429))
     dummy_embed = discord.Embed(title=f"📦 {service_name}")
     ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, usuario, category_id=WEB_CATEGORY_ID)
     if not created:
@@ -132,6 +138,7 @@ async def handle_create_order(request):
         }))
     from cogs.tickets import send_embed_to_pedidos
     await send_embed_to_pedidos(guild, bot.user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel)
+    increment_daily_count(member.id)
     return cors_response(web.json_response({
         "ok": True, "channel_id": str(ticket_channel.id),
         "channel_mention": ticket_channel.mention,
