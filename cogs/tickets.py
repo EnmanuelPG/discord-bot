@@ -31,17 +31,12 @@ class TicketCloseView(discord.ui.View):
                     "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
                 )
                 return
-            await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
+            await interaction.response.defer()
+            await interaction.channel.send(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {member.name} ({member.id})")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        except Exception:
+            pass
 
 
 async def find_member_in_guild(guild, discord_username):
@@ -417,17 +412,12 @@ class Tickets(commands.Cog):
             if not has_role and interaction.user.id != creator_id:
                 await interaction.response.send_message("❌ No tienes permiso para cerrar este ticket.", ephemeral=True)
                 return
-            await interaction.response.send_message(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}")
+            await interaction.response.defer()
+            await interaction.channel.send(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}")
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {interaction.user.name} ({interaction.user.id})")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        except Exception:
+            pass
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
