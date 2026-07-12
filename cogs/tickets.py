@@ -119,9 +119,24 @@ class TicketView(discord.ui.View):
                 name = claimer.display_name if claimer else str(claimed_id)
                 await interaction.response.send_message(f"⚠️ Este ticket ya fue reclamado por **{name}**.", ephemeral=True)
                 return
-            new_topic = f"creator:{self._get_creator_from_topic(interaction.channel)}|claimed:{interaction.user.id}"
-            await interaction.channel.edit(topic=new_topic)
-            await interaction.channel.send(f"📋 **Ticket reclamado por {interaction.user.mention}**")
+            dev_role = interaction.guild.get_role(DEVELOPER_ROLE_ID)
+            tickets_role = interaction.guild.get_role(TICKETS_ROLE_ID)
+            creator_id = self._get_creator_from_topic(interaction.channel)
+            creator = interaction.guild.get_member(creator_id)
+            overwrites = {
+                interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                interaction.guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True, manage_messages=True),
+            }
+            if dev_role:
+                overwrites[dev_role] = discord.PermissionOverwrite(view_channel=True, send_messages=False)
+            if tickets_role:
+                overwrites[tickets_role] = discord.PermissionOverwrite(view_channel=True, send_messages=False)
+            if interaction.user != creator:
+                overwrites[interaction.user] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+            if creator:
+                overwrites[creator] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+            await interaction.channel.edit(topic=f"creator:{creator_id}|claimed:{interaction.user.id}", overwrites=overwrites)
+            await interaction.channel.send(f"📋 **Ticket reclamado por {interaction.user.mention}**\n> Ahora solo {interaction.user.mention} y el creador pueden escribir.")
             await interaction.response.send_message("✅ Ticket reclamado con éxito.", ephemeral=True)
         except Exception:
             try:
