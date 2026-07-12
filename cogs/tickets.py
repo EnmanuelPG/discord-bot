@@ -9,6 +9,7 @@ import re
 PEDIDOS_CHANNEL_ID = 1524947903775375551
 DEVELOPER_ROLE_ID = 1525311162499993730
 TICKETS_CATEGORY_NAME = "TICKETS"
+TICKET_PANEL_CHANNEL_ID = 1525888262470897734
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV"
 
 
@@ -165,6 +166,77 @@ async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detall
     await pedidos_channel.send(f"📌 **Canal del ticket:** {ticket_channel.mention}")
 
 
+PANEL_EMBED = discord.Embed(
+    title="Servicios 𝐓𝐢𝐜𝐤𝐞𝐭𝐬 [𝒁𝒆𝒏𝒕𝒓𝒐𝒙𝑫𝒆𝒗]",
+    description=(
+        "👋 ¡Bienvenido al sistema de tickets de **ZentroxDev**!\n\n"
+        "Selecciona una categoría abajo según el servicio que necesites.\n"
+        "Al hacer clic se creará un canal privado donde solo tú y nuestro "
+        "equipo podrán ver y responder.\n\n"
+        "📝 **Dentro del ticket** te pediremos los detalles de tu proyecto "
+        "para poder ayudarte mejor."
+    ),
+    color=0x3b82f6
+)
+PANEL_EMBED.set_footer(text="ZentroxDev © 2026 · Sistema de Tickets")
+
+
+class TicketPanelView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="🤖 Bot de Discord", style=discord.ButtonStyle.primary, custom_id="panel_bot_discord", row=0)
+    async def btn_bot_discord(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Bot de Discord")
+
+    @discord.ui.button(label="🌐 Página Web", style=discord.ButtonStyle.primary, custom_id="panel_web", row=0)
+    async def btn_web(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Página Web")
+
+    @discord.ui.button(label="🎨 Diseño Gráfico", style=discord.ButtonStyle.success, custom_id="panel_diseno", row=1)
+    async def btn_diseno(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Diseño Gráfico")
+
+    @discord.ui.button(label="⛏️ Bot de Minecraft", style=discord.ButtonStyle.success, custom_id="panel_bot_mc", row=1)
+    async def btn_bot_mc(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Bot de Minecraft")
+
+    @discord.ui.button(label="📜 Scripts", style=discord.ButtonStyle.secondary, custom_id="panel_scripts", row=2)
+    async def btn_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Scripts")
+
+    @discord.ui.button(label="⚙️ Configuración", style=discord.ButtonStyle.secondary, custom_id="panel_config", row=2)
+    async def btn_config(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Configuración")
+
+    @discord.ui.button(label="💬 Soporte", style=discord.ButtonStyle.danger, custom_id="panel_soporte", row=3)
+    async def btn_soporte(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._create_ticket(interaction, "Soporte")
+
+    async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
+        guild = interaction.guild
+        if not guild:
+            await interaction.response.send_message("❌ Esto solo funciona en un servidor.", ephemeral=True)
+            return
+        ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        dummy_embed = discord.Embed(title=f"📦 {service_name}")
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name)
+        if not created:
+            await interaction.response.send_message(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
+            return
+        await ticket_channel.send(
+            f"📝 **Cuéntanos más sobre tu solicitud de {service_name}**\n\n"
+            f"▸ ¿Qué funcionalidades debe tener?\n"
+            f"▸ ¿Tienes algún plazo límite?\n"
+            f"▸ ¿Cuál es tu método de pago preferido?\n\n"
+            f"Un miembro del equipo te atenderá en breve. 💙"
+        )
+        await interaction.response.send_message(
+            f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
+            ephemeral=True
+        )
+
+
 class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
     servicio = discord.ui.TextInput(
         label="¿Qué servicio necesitas?",
@@ -216,6 +288,16 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(name="panel", description="Envía el panel de tickets al canal configurado")
+    @app_commands.default_permissions(administrator=True)
+    async def panel(self, interaction: discord.Interaction):
+        channel = interaction.guild.get_channel(TICKET_PANEL_CHANNEL_ID) if interaction.guild else None
+        if not channel:
+            await interaction.response.send_message("❌ Canal de panel no encontrado.", ephemeral=True)
+            return
+        await channel.send(embed=PANEL_EMBED, view=TicketPanelView())
+        await interaction.response.send_message(f"✅ Panel enviado a {channel.mention}", ephemeral=True)
 
     @app_commands.command(name="pedido", description="Solicita un servicio y crea un ticket")
     async def pedido(self, interaction: discord.Interaction):
@@ -323,3 +405,4 @@ class Tickets(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
+    bot.add_view(TicketPanelView())
