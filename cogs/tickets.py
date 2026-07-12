@@ -37,12 +37,20 @@ class TicketCloseView(discord.ui.View):
                     "❌ Solo el creador del ticket o un administrador puede cerrarlo.", ephemeral=True
                 )
                 return
-            await interaction.response.edit_message(view=None)
+            await interaction.response.defer()
+            try:
+                await interaction.edit_original_response(view=None)
+            except Exception:
+                pass
             await interaction.channel.send(f"🔒 Cerrando ticket... Solicitado por {member.mention}")
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {member.name} ({member.id})")
         except Exception:
-            pass
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("❌ Error al cerrar el ticket.", ephemeral=True)
+            except Exception:
+                pass
 
 
 async def find_member_in_guild(guild, discord_username):
