@@ -443,17 +443,78 @@ class TicketPanelView(discord.ui.View):
         if not created:
             await interaction.followup.send(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
             return
-        await ticket_channel.send(
-            f"📝 **Cuéntanos más sobre tu solicitud de {service_name}**\n\n"
-            f"▸ ¿Qué funcionalidades debe tener?\n"
-            f"▸ ¿Tienes algún plazo límite?\n"
-            f"▸ ¿Cuál es tu método de pago preferido?\n\n"
-            f"Un miembro del equipo te atenderá en breve. 💙"
-        )
+        questions = SERVICE_QUESTIONS.get(service_name, [
+            "📌 **Cuéntanos los detalles de tu solicitud**",
+            "⏰ **¿Tienes algún plazo límite?**",
+            "💳 **¿Cuál es tu método de pago preferido?**",
+        ])
+        msg = f"📝 **Cuéntanos más sobre tu solicitud de {service_name}**\n\n" + \
+              "\n".join(f"{q}" for q in questions) + \
+              "\n\nUn miembro del equipo te atenderá en breve. 💙"
+        await ticket_channel.send(msg)
         await interaction.followup.send(
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
             ephemeral=True
         )
+
+SERVICE_QUESTIONS = {
+    "Bots Personalizados": [
+        "🤖 **¿Qué tipo de bot necesitas?** (Moderación, Música, Tickets, Juegos, Multipropósito...)",
+        "⚙️ **¿Qué funcionalidades específicas debe tener?**",
+        "💻 **¿Para qué plataforma?** (Discord, Telegram, Minecraft...)",
+        "📁 **¿Tienes algún ejemplo o referencia?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Páginas Web": [
+        "🌐 **¿Qué tipo de página web?** (Landing page, Tienda, Blog, Portafolio, Sistema...)",
+        "🎨 **¿Tienes diseño o referencia visual?** (Figma, PDF, ejemplo de otra web...)",
+        "📱 **¿Necesitas que sea responsive?**",
+        "🛠️ **¿Qué funcionalidades debe tener?** (Formularios, login, pasarela de pago...)",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Texturas de ER:LC": [
+        "🎨 **¿Qué tipo de textura buscas?** (Vehículos, uniformes, edificios, armas...)",
+        "🖌️ **Describe el diseño o temática deseada**",
+        "📸 **¿Tienes imágenes de referencia?**",
+        "🎯 **¿Cantidad de texturas que necesitas?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Mapas personalizados ER:LC": [
+        "🗺️ **¿Qué tipo de mapa?** (Roleplay, carrera, drifting, persecución...)",
+        "📐 **¿Tamaño aproximado del mapa?**",
+        "🏗️ **¿Edificios o estructuras específicas?**",
+        "🌆 **¿Temática o ambientación deseada?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Servicios de Discord": [
+        "🛡️ **¿Qué servicio necesitas?** (Configuración del servidor, moderación, roles, bots...)",
+        "📋 **Describe lo que quieres implementar**",
+        "👥 **¿Cuántos miembros tiene el servidor?**",
+        "🔧 **¿Tienes algún bot o herramienta ya instalada?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Redacción de documentos ER:LC": [
+        "📝 **¿Qué tipo de documento necesitas?** (Reglas, lore, sanciones, rangos...)",
+        "📄 **¿Tienes algún borrador o base?**",
+        "🎯 **¿Extensión aproximada?** (Páginas o palabras)",
+        "🏷️ **¿Temática o estilo del documento?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+    "Diseño gráfico": [
+        "🎨 **¿Qué tipo de diseño?** (Logo, banner, portada, thumbnail, empaque...)",
+        "🖼️ **¿Tienes referencias visuales?**",
+        "🌈 **¿Colores o paleta deseada?**",
+        "📐 **¿Tamaño o formato específico?**",
+        "⏰ **¿Cuál es tu plazo límite?**",
+        "💳 **¿Cuál es tu método de pago preferido?**",
+    ],
+}
 
 
 class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
