@@ -14,7 +14,8 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
-CREATOR_ID = 1257780268719411260
+CREATOR_ID = 1522702606437322882
+ALLOWED_GUILDS = {1525894268651176159}
 MAX_TICKETS_PER_DAY = 3
 _user_daily_tickets = {}
 
@@ -599,8 +600,8 @@ SERVICE_QUESTIONS = {
         "📋 **¿Qué tipo de alianza buscas?** (Publicidad mutua, eventos conjuntos, colaboración...)",
         "👥 **¿Cuántos miembros tiene tu comunidad?**",
         "🌐 **¿Tienes servidor de Discord o redes sociales?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "📢 **¿Cómo podemos promocionar tu comunidad?**",
+        "🔄 **¿Qué beneficios ofreces a cambio?**",
     ],
 }
 
@@ -848,6 +849,20 @@ class Tickets(commands.Cog):
                 await owner.send(f"📤 El bot fue removido del servidor **{guild.name}** ({guild.id})")
             except Exception:
                 pass
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        if guild.id not in ALLOWED_GUILDS:
+            owner = self.bot.get_user(CREATOR_ID)
+            if owner:
+                try:
+                    await owner.send(
+                        f"🚫 Alguien intentó añadir el bot a **{guild.name}** ({guild.id}). "
+                        "Saliendo automáticamente."
+                    )
+                except Exception:
+                    pass
+            await guild.leave()
 
 
 async def setup(bot):
