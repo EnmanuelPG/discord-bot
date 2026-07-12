@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZentroxDev — Ideas que construyen soluciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  :root{
+    --bg: #03050e;
+    --bg-alt: #080c20;
+    --card: #0d1230;
+    --card-hover: #121840;
+    --border: rgba(99,130,250,0.12);
+    --border-strong: rgba(99,130,250,0.35);
+    --accent: #3b82f6;
+    --accent-dark: #1d4ed8;
+    --accent-light: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.25);
+    --text: #eef2ff;
+    --text-muted: #8890b5;
+    --text-dim: #555c85;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --radius: 16px;
+    --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+    --gradient2: linear-gradient(135deg, #3b82f6, #60a5fa);
+  }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{text-decoration:none;color:inherit;}
+  ::selection{background:var(--accent);color:#fff;}
+
+  .bg-glow{
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 1000px 600px at 15% 0%, rgba(59,130,246,0.12), transparent 65%),
+      radial-gradient(ellipse 800px 500px at 85% 10%, rgba(139,92,246,0.08), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 50% 50%, rgba(236,72,153,0.04), transparent 55%),
+      var(--bg);
+  }
+  .grid-overlay{
+    position:fixed;inset:0;z-index:-1;opacity:0.3;
+    background-image:
+      linear-gradient(rgba(99,130,250,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,130,250,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
+    mask-image:radial-gradient(ellipse 70% 50% at 50% 20%, black, transparent 70%);
+  }
+
+  .gradient-text{
+    background:var(--gradient);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    background-size:200% 200%;
+    animation:gradientShift 6s ease infinite;
+  }
+  @keyframes gradientShift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  .gradient-text-simple{
+    background:var(--gradient2);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 6vw;
+    background:rgba(3,5,14,0.78);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-brand{
+    display:flex;align-items:center;gap:12px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:1.05rem;
+    letter-spacing:-0.02em;
+  }
+  .nav-brand .brand-accent{
+    background:var(--gradient);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .nav-hex{width:30px;height:30px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(59,130,246,0.3));}
+  .nav-links{display:flex;gap:28px;font-size:0.92rem;color:var(--text-muted);}
+  .nav-links a{position:relative;transition:color .2s;}
+  .nav-links a::after{
+    content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;
+    background:var(--gradient2);border-radius:2px;
+    transition:width .25s;
+  }
+  .nav-links a:hover{color:var(--accent-light);}
+  .nav-links a:hover::after{width:100%;}
+  .nav-cta{
+    padding:10px 22px;border-radius:999px;font-weight:600;font-size:0.88rem;
+    background:var(--gradient2);color:#fff;
+    box-shadow:0 0 20px rgba(59,130,246,0.25);
+    transition:transform .2s, box-shadow .2s;
+    position:relative;overflow:hidden;
+  }
+  .nav-cta::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity:0;transition:opacity .3s;
+  }
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(59,130,246,0.4);}
+  .nav-cta:hover::before{opacity:1;}
+  @media (max-width:820px){ .nav-links{display:none;} }
+
+  .hero{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:110px 6vw 70px;
+    position:relative;
+  }
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 18px;border-radius:999px;
+    background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);
+    font-size:0.82rem;color:var(--accent-light);margin-bottom:24px;
+    font-family:'JetBrains Mono',monospace;
+    animation:fadeInUp .6s ease;
+  }
+  .hero-badge .pulse-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--success);
+    animation:pulse 1.8s infinite;
+  }
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,0.5);}70%{box-shadow:0 0 0 10px rgba(52,211,153,0);}100%{box-shadow:0 0 0 0 rgba(52,211,153,0);}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .hero-hex{
+    width:100px;height:100px;margin-bottom:24px;
+    filter:drop-shadow(0 0 30px rgba(59,130,246,0.35));
+    animation:float 6s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .hero h1{
+    font-size:clamp(3rem,8vw,5.2rem);
+    font-weight:800;letter-spacing:-0.03em;
+    line-height:1.05;
+    animation:fadeInUp .6s ease .15s both;
+  }
+  .hero .hero-desc{
+    margin-top:20px;
+    font-size:clamp(1.05rem,2vw,1.3rem);
+    color:var(--text-muted);
+    max-width:600px;
+    animation:fadeInUp .6s ease .3s both;
+  }
+  .hero .hero-desc b{color:var(--accent-light);}
+  .hero-ctas{
+    display:flex;gap:16px;margin-top:36px;flex-wrap:wrap;justify-content:center;
+    animation:fadeInUp .6s ease .45s both;
+  }
+  .btn-primary, .btn-ghost{
+    padding:14px 30px;border-radius:999px;font-weight:600;font-size:0.95rem;
+    display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;
+    transition:transform .2s, box-shadow .2s, background .2s;
+  }
+  .btn-primary{
+    background:var(--gradient2);color:#fff;
+    box-shadow:0 8px 28px -6px rgba(59,130,246,0.5);
+    position:relative;overflow:hidden;
+  }
+  .btn-primary::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+    opacity:0;transition:opacity .3s;
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 36px -6px rgba(59,130,246,0.65);}
+  .btn-primary:hover::before{opacity:1;}
+  .btn-ghost{
+    background:rgba(59,130,246,0.06);color:var(--text);
+    border:1px solid var(--border-strong);
+  }
+  .btn-ghost:hover{background:rgba(59,130,246,0.12);border-color:var(--accent-light);transform:translateY(-2px);}
+
+  .hero-panel{
+    margin-top:56px;max-width:420px;width:100%;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:0 25px 60px -25px rgba(0,0,0,0.7);
+    text-align:left;overflow:hidden;
+    animation:fadeInUp .6s ease .6s both;
+    backdrop-filter:blur(4px);
+  }
+  .hero-panel-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;border-bottom:1px solid var(--border);
+    font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:0.06em;
+  }
+  .hero-panel-head .hp-left{display:flex;align-items:center;gap:8px;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;animation:pulse 1.8s infinite;}
+  .live-label{font-weight:500;}
+  .hp-minimize{color:var(--text-dim);}
+  .hero-panel-body{padding:20px 22px 22px;}
+  .hero-panel-row{display:flex;align-items:center;gap:14px;}
+  .hp-icon{
+    width:46px;height:46px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.08));
+    border:1px solid var(--border-strong);
+    display:flex;align-items:center;justify-content:center;font-size:1.35rem;
+    transition:opacity .3s;
+  }
+  .hp-info{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .hp-service{font-weight:600;font-size:1rem;transition:opacity .3s;}
+  .hp-id{font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:0.78rem;}
+  .hp-status{
+    display:flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:6px;
+    background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);
+    font-size:0.75rem;color:var(--success);white-space:nowrap;
+  }
+  .hp-status-dot{width:5px;height:5px;border-radius:50%;background:var(--success);}
+
+  section{padding:110px 6vw;position:relative;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.1em;
+    color:var(--accent-light);text-transform:uppercase;margin-bottom:12px;display:block;
+    font-weight:500;
+  }
+  .section-title{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:700;letter-spacing:-0.01em;}
+  .section-sub{color:var(--text-muted);max-width:600px;margin-top:14px;font-size:1.02rem;}
+
+  .about-intro{max-width:760px;margin-bottom:56px;}
+  .about-intro p{color:var(--text-muted);margin-top:16px;font-size:1.05rem;line-height:1.75;}
+
+  .feature-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;
+  }
+  .feature-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:30px 28px;
+    transition:transform .25s, border-color .25s, box-shadow .25s;
+    position:relative;overflow:hidden;
+  }
+  .feature-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--gradient2);
+    opacity:0;transition:opacity .3s;
+  }
+  .feature-card:hover::before{opacity:1;}
+  .feature-card:hover{transform:translateY(-5px);border-color:var(--border-strong);box-shadow:0 20px 40px -20px rgba(59,130,246,0.15);background:var(--card-hover);}
+  .feature-card .fc-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+  .feature-icon{
+    width:44px;height:44px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.06));
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+    border:1px solid var(--border-strong);
+  }
+  .feature-card h3{font-size:1.1rem;font-weight:600;}
+  .feature-card ul{color:var(--text-muted);font-size:0.9rem;padding-left:16px;list-style:none;}
+  .feature-card ul li{margin-bottom:5px;position:relative;padding-left:14px;}
+  .feature-card ul li::before{content:'›';position:absolute;left:0;color:var(--accent-light);font-weight:700;}
+
+  .why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-top:48px;}
+  .why-item{border-top:1px solid var(--border);padding-top:20px;}
+  .why-item .num{font-family:'JetBrains Mono',monospace;color:var(--accent-light);font-size:0.85rem;}
+  .why-item h4{margin-top:8px;font-size:1.1rem;font-weight:600;}
+  .why-item p{color:var(--text-muted);margin-top:6px;font-size:0.94rem;}
+
+  .process-track{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin-top:50px;
+    position:relative;
+  }
+  .process-step{padding:0 20px 0 0;position:relative;}
+  .process-step .line{
+    height:2px;background:linear-gradient(90deg,var(--accent),transparent);
+    margin-bottom:20px;border-radius:2px;
+  }
+  .process-step:last-child .line{background:var(--accent);}
+  .process-step .tag{font-family:'JetBrains Mono',monospace;color:var(--accent-light);font-size:0.8rem;}
+  .process-step h4{margin-top:8px;font-size:1.06rem;}
+  .process-step p{color:var(--text-muted);font-size:0.88rem;margin-top:6px;}
+
+  .orders-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:48px;
+  }
+  .order-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:28px 24px;cursor:pointer;transition:.25s;position:relative;overflow:hidden;
+  }
+  .order-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--gradient2);
+    opacity:0;transition:opacity .3s;
+  }
+  .order-card:hover::before{opacity:1;}
+  .order-card:hover{border-color:var(--accent-light);transform:translateY(-5px);box-shadow:0 16px 40px -18px rgba(59,130,246,0.5);}
+  .order-card .oi{font-size:1.8rem;margin-bottom:14px;display:block;}
+  .order-card h3{font-size:1.12rem;font-weight:600;margin-bottom:8px;}
+  .order-card p{color:var(--text-muted);font-size:0.88rem;}
+  .order-card .go{
+    margin-top:16px;display:inline-flex;align-items:center;gap:6px;
+    color:var(--accent-light);font-weight:600;font-size:0.86rem;
+    transition:gap .2s;
+  }
+  .order-card:hover .go{gap:10px;}
+
+  .cta-section{
+    text-align:center;padding:90px 6vw;
+    border-top:1px solid var(--border);
+  }
+  .cta-section h2{font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:700;}
+  .cta-section p{color:var(--text-muted);margin-top:14px;max-width:500px;margin-inline:auto;}
+  .cta-section .btn-primary{margin-top:28px;}
+
+  footer{padding:60px 6vw 36px;border-top:1px solid var(--border);}
+  .footer-inner{display:flex;flex-wrap:wrap;justify-content:space-between;gap:30px;}
+  .footer-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;}
+  .footer-brand .brand-accent{
+    background:var(--gradient);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .footer-brand svg{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(59,130,246,0.2));}
+  footer .foot-note{color:var(--text-dim);font-size:0.85rem;margin-top:10px;max-width:280px;}
+  .footer-links{display:flex;gap:24px;flex-wrap:wrap;color:var(--text-muted);font-size:0.9rem;}
+  .footer-links a:hover{color:var(--accent-light);}
+  .footer-social{display:flex;gap:12px;margin-top:14px;}
+  .footer-social a{
+    width:36px;height:36px;border-radius:10px;
+    background:var(--card);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;transition:.2s;
+  }
+  .footer-social a:hover{background:var(--card-hover);border-color:var(--border-strong);}
+  .copyright{width:100%;text-align:center;color:var(--text-dim);font-size:0.8rem;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);}
+
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(2,3,10,0.82);
+    backdrop-filter:blur(8px);
+    display:none;align-items:center;justify-content:center;
+    z-index:100;padding:20px;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal{
+    width:100%;max-width:520px;background:var(--card);
+    border:1px solid var(--border-strong);
+    border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,0.8);
+    animation:pop .3s ease;
+  }
+  @keyframes pop{from{transform:scale(.92) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 22px;border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(59,130,246,0.08), transparent);
+  }
+  .modal-head .who{display:flex;align-items:center;gap:10px;font-weight:600;}
+  .modal-head .close{cursor:pointer;color:var(--text-muted);font-size:1.3rem;line-height:1;transition:color .2s;}
+  .modal-head .close:hover{color:#fff;}
+  .progress-dots{display:flex;gap:6px;padding:14px 22px 0;}
+  .progress-dots span{height:4px;flex:1;border-radius:2px;background:var(--border);transition:background .3s;}
+  .progress-dots span.done{background:var(--accent);}
+  .chat-area{padding:20px 22px;min-height:200px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+  .bubble{max-width:92%;padding:12px 16px;border-radius:14px;font-size:0.92rem;line-height:1.55;}
+  .bubble.bot{align-self:flex-start;background:rgba(59,130,246,0.08);border:1px solid var(--border);border-bottom-left-radius:4px;}
+  .bubble.bot b{color:var(--accent-light);}
+  .bubble.user{align-self:flex-end;background:var(--gradient2);color:#fff;border-bottom-right-radius:4px;}
+  .bubble .inline-link{color:var(--accent-light);text-decoration:underline;}
+  .typing{
+    display:flex;gap:5px;align-self:flex-start;
+    padding:12px 16px;
+    background:rgba(59,130,246,0.08);border:1px solid var(--border);
+    border-radius:14px;border-bottom-left-radius:4px;
+  }
+  .typing span{width:6px;height:6px;border-radius:50%;background:var(--accent-light);animation:blink 1.4s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .modal-input{display:flex;gap:10px;padding:16px 22px 22px;border-top:1px solid var(--border);}
+  .modal-input input{
+    flex:1;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:10px;padding:11px 14px;color:var(--text);
+    font-size:0.92rem;font-family:'Inter',sans-serif;
+    outline:none;transition:border-color .2s;
+  }
+  .modal-input input:focus{border-color:var(--accent-light);}
+  .modal-input button{
+    background:var(--gradient2);color:#fff;border:none;border-radius:10px;
+    padding:0 22px;font-weight:600;cursor:pointer;transition:opacity .2s;
+    white-space:nowrap;
+  }
+  .modal-input button:hover{opacity:.85;}
+  .modal-input button:disabled{opacity:.4;cursor:not-allowed;}
+  .modal-final{padding:22px 24px 24px;}
+  .ticket{
+    background:var(--bg-alt);border:1px dashed var(--border-strong);border-radius:12px;
+    padding:16px 18px;font-family:'JetBrains Mono',monospace;
+    font-size:0.82rem;color:var(--text-muted);
+    line-height:1.8;margin-bottom:16px;white-space:pre-wrap;
+  }
+  .ticket b{color:var(--text);}
+  .final-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .final-actions button, .final-actions a{
+    flex:1;text-align:center;padding:11px;border-radius:10px;
+    font-weight:600;font-size:0.88rem;cursor:pointer;border:none;
+    transition:background .2s, transform .2s;
+    min-width:140px;
+  }
+  .final-actions .copy-btn{background:transparent;border:1px solid var(--border-strong);color:var(--text);}
+  .final-actions .copy-btn:hover{background:rgba(59,130,246,0.08);}
+  .final-actions .discord-btn{
+    background:var(--gradient2);color:#fff;
+    box-shadow:0 0 16px rgba(59,130,246,0.2);
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .final-actions .discord-btn:hover{transform:translateY(-2px);}
+  .success-note{font-size:0.88rem;margin-top:12px;display:none;line-height:1.6;}
+  .success-note.show{display:block;}
+  .discord-hint{
+    background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);
+    border-radius:10px;padding:10px 14px;font-size:0.82rem;
+    color:var(--text-muted);margin-top:6px;line-height:1.5;
+  }
+  .discord-hint b{color:var(--warning);}
+  .discord-hint a{color:var(--accent-light);text-decoration:underline;}
+
+  @media(max-width:600px){
+    section{padding:70px 6vw;}
+    .hero{padding:80px 6vw 50px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="grid-overlay"></div>
+
+<header class="nav">
+  <div class="nav-brand">
+    <svg class="nav-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,4 92,27 92,83 50,106 8,83 8,27" stroke="#3b82f6" stroke-width="6"/>
+      <text x="50" y="66" font-family="JetBrains Mono, monospace" font-size="34" fill="#60a5fa" text-anchor="middle" font-weight="600">&lt;/&gt;</text>
+    </svg>
+    <span class="brand-accent">Zentrox</span>Dev
+  </div>
+  <nav class="nav-links">
+    <a href="#servicios">Servicios</a>
+    <a href="#proceso">Proceso</a>
+    <a href="#pedidos">Pedidos</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+  <a href="#pedidos" class="nav-cta">Hacer pedido →</a>
+</header>
+
+<section class="hero">
+  <div class="hero-badge"><span class="pulse-dot"></span> Disponible para proyectos</div>
+  <svg class="hero-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="50,4 92,27 92,83 50,106 8,83 8,27" stroke="#3b82f6" stroke-width="5"/>
+    <text x="50" y="66" font-family="JetBrains Mono, monospace" font-size="32" fill="#60a5fa" text-anchor="middle" font-weight="600">&lt;/&gt;</text>
+  </svg>
+  <h1>𝒁𝒆𝒏𝒕𝒓𝒐𝒙𝑫𝒆𝒗<br>Ideas que construyen<span class="gradient-text">soluciones</span></h1>
+  <p class="hero-desc">Mapas, bots, páginas web, software, documentos y diseño gráfico — hechos a tu medida, <b>sin plantillas</b>.</p>
+  <div class="hero-ctas">
+    <a href="#pedidos" class="btn-primary">Empezar mi pedido →</a>
+    <a href="#servicios" class="btn-ghost">Nuestros Servicios</a>
+  </div>
+  <div class="hero-panel">
+    <div class="hero-panel-head">
+      <div class="hp-left"><span class="live-dot"></span><span class="live-label">Ticket en vivo</span></div>
+      <span class="hp-minimize">—</span>
+    </div>
+    <div class="hero-panel-body">
+      <div class="hero-panel-row">
+        <span class="hp-icon" id="heroIcon">🤖</span>
+        <div class="hp-info">
+          <div class="hp-service" id="heroService">Bots Personalizados</div>
+          <div class="hp-id" id="heroId">#ZDX-4821</div>
+        </div>
+        <div class="hp-status"><span class="hp-status-dot"></span> Recibido</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="servicios">
+  <div class="about-intro">
+    <span class="eyebrow">Quiénes somos</span>
+    <h2 class="section-title">🚀 Bienvenido a <span class="gradient-text-simple">ZentroxDev</span></h2>
+    <p>En ZentroxDev convertimos tus ideas en soluciones digitales. Nos apasiona desarrollar herramientas modernas, funcionales y totalmente adaptadas a las necesidades de cada cliente. No vendemos plantillas: creamos soluciones diseñadas especialmente para ti.</p>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🤖</span><h3>Bots personalizados</h3></div>
+      <ul>
+        <li>Bots para Discord</li>
+        <li>Bots de roleplay</li>
+        <li>Moderación, economía, tickets, IA</li>
+        <li>Cualquier bot según tu idea</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🌐</span><h3>Páginas web a medida</h3></div>
+      <ul>
+        <li>Webs Generales al gusto</li>
+        <li>Landing pages y portafolios</li>
+        <li>Tiendas y paneles de control</li>
+        <li>Diseño responsive y optimizado</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🪄</span><h3>Texturas de ER:LC</h3></div>
+      <ul>
+        <li>Texturas profesionales rápidas</li>
+        <li>Cualquier tipo y temática</li>
+        <li>Calidad y rapidez máxima</li>
+        <li>Un legado que sigue</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🗺️</span><h3>Mapas personalizados ER:LC</h3></div>
+      <ul>
+        <li>Diseño profesional de mapas</li>
+        <li>Bases, ciudades y más</li>
+        <li>Optimizados y funcionales</li>
+        <li>Cualquier temática</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🛠️</span><h3>Servicios de Discord</h3></div>
+      <ul>
+        <li>Bots a medida</li>
+        <li>Configuración y diseño</li>
+        <li>Paneles de administración</li>
+        <li>Todo para tu comunidad</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">📝</span><h3>Documentos ER:LC</h3></div>
+      <ul>
+        <li>Manuales, reglamentos, guiones</li>
+        <li>Documentos para facciones</li>
+        <li>Redacción profesional</li>
+        <li>Formato atractivo</li>
+      </ul>
+    </div>
+    <div class="feature-card">
+      <div class="fc-head"><span class="feature-icon">🎨</span><h3>Diseño gráfico</h3></div>
+      <ul>
+        <li>Logos, banners y portadas</li>
+        <li>Thumbnails para redes</li>
+        <li>Interfaces y paneles</li>
+        <li>Identidad visual completa</li>
+      </ul>
+    </div>
+  </div>
+  <div class="why-grid">
+    <div class="why-item">
+      <span class="num">01</span>
+      <h4>Cero plantillas</h4>
+      <p>Cada proyecto se diseña desde cero, pensado para tu idea exacta.</p>
+    </div>
+    <div class="why-item">
+      <span class="num">02</span>
+      <h4>Comunicación directa</h4>
+      <p>Hablas con quien desarrolla tu proyecto, sin intermediarios.</p>
+    </div>
+    <div class="why-item">
+      <span class="num">03</span>
+      <h4>Entrega ágil</h4>
+      <p>Tiempos de desarrollo rápidos sin sacrificar la calidad.</p>
+    </div>
+    <div class="why-item">
+      <span class="num">04</span>
+      <h4>Escala contigo</h4>
+      <p>Construimos pensando en lo que tu proyecto va a necesitar mañana.</p>
+    </div>
+  </div>
+</section>
+
+<section id="proceso">
+  <span class="eyebrow">Cómo trabajamos</span>
+  <h2 class="section-title">De la idea a la entrega</h2>
+  <p class="section-sub">Un proceso simple, pensado para que sepas exactamente en qué punto va tu proyecto.</p>
+  <div class="process-track">
+    <div class="process-step">
+      <div class="line"></div>
+      <span class="tag">01 · Contacto</span>
+      <h4>Nos cuentas tu idea</h4>
+      <p>Eliges el servicio y respondes unas preguntas rápidas sobre lo que necesitas.</p>
+    </div>
+    <div class="process-step">
+      <div class="line"></div>
+      <span class="tag">02 · Propuesta</span>
+      <h4>Definimos el alcance</h4>
+      <p>Te confirmamos detalles, tiempos y método de pago acordado.</p>
+    </div>
+    <div class="process-step">
+      <div class="line"></div>
+      <span class="tag">03 · Desarrollo</span>
+      <h4>Construimos tu solución</h4>
+      <p>Trabajamos tu proyecto con actualizaciones directas por Discord.</p>
+    </div>
+    <div class="process-step">
+      <span class="tag">04 · Entrega</span>
+      <h4>Recibes tu proyecto</h4>
+      <p>Pruebas, ajustes finales y soporte una vez entregado.</p>
+    </div>
+  </div>
+</section>
+
+<section id="pedidos">
+  <span class="eyebrow">Haz tu pedido</span>
+  <h2 class="section-title">¿Qué vamos a construir hoy?</h2>
+  <p class="section-sub">Elige una opción y te haremos unas preguntas cortas para dejar tu pedido listo.</p>
+  <div class="orders-grid">
+    <div class="order-card" onclick="openOrder('bots')">
+      <span class="oi">🤖</span>
+      <h3>Bots Personalizados</h3>
+      <p>Discord, roleplay, moderación, IA y lo que tengas en mente.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('web')">
+      <span class="oi">🌐</span>
+      <h3>Páginas Web</h3>
+      <p>Landing pages, portafolios, tiendas y webs en general al gusto</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('texturas')">
+      <span class="oi">🪄</span>
+      <h3>Texturas de ER:LC</h3>
+      <p>Texturas profesionales, con rapidez máxima y calidad que se nota.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('mapas')">
+      <span class="oi">🗺️</span>
+      <h3>Mapas personalizados ER:LC</h3>
+      <p>Diseño profesional de mapas, desde bases hasta ciudades completas.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('discord')">
+      <span class="oi">🛠️</span>
+      <h3>Servicios de Discord</h3>
+      <p>Bots, configuración, paneles y más para tu comunidad.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('documentos')">
+      <span class="oi">📝</span>
+      <h3>Redacción documentos ER:LC</h3>
+      <p>Manuales, reglamentos, guiones y reportes profesionales.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+    <div class="order-card" onclick="openOrder('diseno')">
+      <span class="oi">🎨</span>
+      <h3>Diseño gráfico</h3>
+      <p>Logos, banners, thumbnails e identidad visual para tu marca.</p>
+      <span class="go">Pedir ahora →</span>
+    </div>
+  </div>
+</section>
+
+<div class="cta-section">
+  <h2>¿Listo para empezar?</h2>
+  <p>Cuéntanos tu idea y te daremos un presupuesto sin compromiso.</p>
+  <a href="#pedidos" class="btn-primary">Hacer mi pedido →</a>
+</div>
+
+<footer id="contacto">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,4 92,27 92,83 50,106 8,83 8,27" stroke="#3b82f6" stroke-width="7"/>
+          <text x="50" y="66" font-family="JetBrains Mono, monospace" font-size="34" fill="#60a5fa" text-anchor="middle" font-weight="600">&lt;/&gt;</text>
+        </svg>
+        <span class="brand-accent">Zentrox</span>Dev
+      </div>
+      <p class="foot-note">Ideas que construyen soluciones. Sin plantillas, sin límites.</p>
+      <div class="footer-social">
+        <a href="https://discord.gg/bBQmzEUEvc" title="Discord">💬</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="#servicios">Servicios</a>
+      <a href="#proceso">Proceso</a>
+      <a href="#pedidos">Pedidos</a>
+      <a href="https://discord.gg/bBQmzEUEvc">Discord</a>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:30px;color:var(--text-muted);font-size:0.85rem;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--accent-light);text-transform:uppercase;letter-spacing:0.1em;">Desarrolladores</span>
+    <div style="display:flex;justify-content:center;gap:24px;margin-top:6px;flex-wrap:wrap;">
+      <span>1. Enmanuel Pérez</span>
+      <span>2. Daniel Gómez</span>
+    </div>
+  </div>
+  <p class="copyright">© 2026 ZentroxDev — Todos los derechos reservados.</p>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="who"><span id="modalIcon">🤖</span> <span id="modalTitle">Bots Personalizados</span></div>
+      <div class="close" onclick="closeOrder()">&times;</div>
+    </div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="chat-area" id="chatArea"></div>
+    <div class="modal-input" id="modalInputRow">
+      <input type="text" id="modalInput" placeholder="Escribe tu respuesta..." onkeydown="if(event.key==='Enter')submitAnswer()">
+      <button id="modalSendBtn" onclick="submitAnswer()">Enviar</button>
+    </div>
+    <div class="modal-final" id="modalFinal" style="display:none;">
+      <div class="ticket" id="ticketContent"></div>
+      <div class="final-actions">
+        <button class="copy-btn" onclick="copyTicket()">📋 Copiar pedido</button>
+        <a class="discord-btn" href="https://discord.gg/bBQmzEUEvc" target="_blank" id="finalDiscordBtn">💬 Ir al Discord</a>
+      </div>
+      <div class="success-note" id="successNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1525275298369769653/Bp1OQijkZmBKyZvGlN6FnrgD89JCJVZ3oVb9KXDVpE2QEBm5dY-kVfpnEj-B2rYvnhuV";
+const DISCORD_INVITE = "https://discord.gg/bBQmzEUEvc";
+const BOT_API_URL = "https://worker-production-5166.up.railway.app";
+
+const serviceThumbnails = {
+  bots: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f916.png',
+  web: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f310.png',
+  texturas: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1fa84.png',
+  mapas: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f5fa.png',
+  discord: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f6e0.png',
+  documentos: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dd.png',
+  diseno: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3a8.png'
+};
+
+const services = {
+  bots: {
+    name:'Bots Personalizados', icon:'🤖',
+    questions:[
+      '¿Qué tipo de bot necesitas? (moderación, economía, tickets, IA, roleplay, nivelación, música, etc.)',
+      'Describe detalladamente las funciones principales que debe tener el bot',
+      '¿Tienes algún ejemplo, referencia o bot similar en el que inspirarte? (puedes mencionar nombres o características)',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  web: {
+    name:'Páginas Web', icon:'🌐',
+    questions:[
+      '¿Qué tipo de página web necesitas? (landing page, tienda online, panel de control, blog, portafolio, etc.)',
+      'Describe las secciones o páginas que debe incluir (ej: inicio, servicios, contacto, galería, etc.)',
+      '¿Tienes algún diseño, referencia o ejemplo de lo que buscas? (colores, estilo, páginas de referencia)',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  texturas: {
+    name:'Texturas de ER:LC', icon:'🪄',
+    questions:[
+      '¿Qué tipo de textura deseas? (policía, EMS, mecánico, taxi, juez, personalizada, etc.)',
+      'Describe los colores, estilo y detalles específicos que debe tener la textura',
+      '¿Tienes imágenes de referencia o ejemplos para guiar el diseño?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  mapas: {
+    name:'Mapas personalizados ER:LC', icon:'🗺️',
+    questions:[
+      '¿Qué tipo de mapa deseas? (base, ciudad, comisaría, hospital, academia, etc.)',
+      'Describe el tamaño, estilo y características principales que debe incluir',
+      '¿Tienes referencias visuales, ejemplos o ideas concretas para el diseño?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  discord: {
+    name:'Servicios de Discord', icon:'🛠️',
+    questions:[
+      '¿Qué necesitas para tu servidor de Discord? (bots personalizados, configuración, diseño de canales, paneles, etc.)',
+      'Describe en detalle lo que requieres y para qué tipo de servidor es',
+      '¿Tienes algún ejemplo o referencia de lo que quieres lograr?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  documentos: {
+    name:'Redacción de documentos ER:LC', icon:'📝',
+    questions:[
+      '¿Qué tipo de documento necesitas? (reglamento, manual, guión, reporte, normativa, etc.)',
+      'Describe el contenido, la extensión y el formato que debe tener',
+      '¿Tienes algún ejemplo, formato o documento de referencia?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  },
+  diseno: {
+    name:'Diseño gráfico', icon:'🎨',
+    questions:[
+      '¿Qué tipo de diseño necesitas? (logo, banner, thumbnail, portada, interfaz, identidad visual, etc.)',
+      'Describe los colores, estilo, tipografía y elementos que debe incluir',
+      '¿Tienes referencias visuales, moodboard o ejemplos de lo que buscas?',
+      '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
+      'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
+    ]
+  }
+};
+
+const heroServices = [
+  {icon:'🤖',name:'Bots Personalizados'},{icon:'🌐',name:'Páginas Web'},{icon:'🪄',name:'Texturas de ER:LC'},
+  {icon:'🗺️',name:'Mapas personalizados ER:LC'},{icon:'🛠️',name:'Servicios de Discord'},{icon:'📝',name:'Redacción de documentos ER:LC'},{icon:'🎨',name:'Diseño gráfico'}
+];
+
+let heroIdx = 0;
+function cycleHero(){
+  const a=[document.getElementById('heroIcon'),document.getElementById('heroService'),document.getElementById('heroId')];
+  a.forEach(el=>el.style.opacity=0);
+  setTimeout(()=>{
+    heroIdx=(heroIdx+1)%heroServices.length;
+    document.getElementById('heroIcon').textContent=heroServices[heroIdx].icon;
+    document.getElementById('heroService').textContent=heroServices[heroIdx].name;
+    document.getElementById('heroId').textContent='#ZDX-'+Math.floor(1000+Math.random()*9000);
+    a.forEach(el=>el.style.opacity=1);
+  },300);
+}
+setInterval(cycleHero,3200);
+
+let currentService=null, currentStep=0, currentTicketId=null, answers=[], detailQuestions=[];
+
+function generateTicketId(){return 'ZDX-'+Math.floor(1000+Math.random()*9000);}
+
+async function sendTicketToDiscord(ticketId, service, answersList, detailQs){
+  const nonPayment = answersList.slice(0, -2);
+  const metodo = answersList[answersList.length-2] || '—';
+  const usuario = answersList[answersList.length-1] || '—';
+  let detalle = '';
+  nonPayment.forEach((a, i) => {
+    detalle += '▸ ' + a + '\n';
+  });
+  detalle = detalle.trim();
+
+  try{
+    const res=await fetch(BOT_API_URL+'/api/order',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        ticket_id:ticketId, service_name:service.name,
+        detalle:detalle, metodo:metodo, usuario:usuario
+      })
+    });
+    const data=await res.json();
+    if(data.ok){
+      try{
+        const orders=JSON.parse(localStorage.getItem('zentrox_orders')||'[]');
+        orders.push(Date.now());
+        localStorage.setItem('zentrox_orders',JSON.stringify(orders));
+      }catch(e){}
+      return {ok:true, channel_url:data.channel_url, channel_mention:data.channel_mention};
+    }
+    return {ok:false, error:data.error, message:data.message};
+  }catch(e){return {ok:false, error:'network', message:'No se pudo conectar con el servidor.'};}
+}
+
+function getOrderCount(){
+  try{
+    const data=JSON.parse(localStorage.getItem('zentrox_orders')||'[]');
+    const recent=data.filter(t=>Date.now()-t<86400000);
+    localStorage.setItem('zentrox_orders',JSON.stringify(recent));
+    return recent.length;
+  }catch(e){return 0;}
+}
+
+function openOrder(k){
+  const count=getOrderCount();
+  if(count>=2){
+    const chat=document.getElementById('chatArea');
+    chat.innerHTML='';
+    document.getElementById('modalIcon').textContent='🚫';
+    document.getElementById('modalTitle').textContent='Límite alcanzado';
+    document.getElementById('modalInputRow').style.display='none';
+    document.getElementById('modalFinal').style.display='none';
+    const dots=document.getElementById('progressDots');dots.innerHTML='';
+    document.getElementById('modalOverlay').classList.add('active');
+    const msg=document.createElement('div');
+    msg.style.cssText='text-align:center;padding:30px 20px;color:var(--text-muted);';
+    msg.innerHTML='<div style="font-size:3rem;margin-bottom:16px">🚫</div><h3 style="color:var(--text);margin-bottom:10px">Has alcanzado el límite de pedidos</h3><p style="font-size:0.9rem;line-height:1.6">Solo puedes realizar <b style="color:var(--accent-light)">2 pedidos por día</b> desde este dispositivo.<br>Si necesitas más, contacta directamente por Discord.</p><a href="'+DISCORD_INVITE+'" target="_blank" style="display:inline-block;margin-top:18px;padding:12px 24px;background:var(--gradient2);border-radius:999px;color:#fff;font-weight:600;font-size:0.9rem">Ir al Discord →</a>';
+    chat.appendChild(msg);
+    return;
+  }
+  currentService=services[k];currentStep=0;answers=[];
+  detailQuestions = currentService.questions.slice(0, -2);
+  document.getElementById('modalIcon').textContent=currentService.icon;
+  document.getElementById('modalTitle').textContent=currentService.name;
+  document.getElementById('chatArea').innerHTML='';
+  document.getElementById('modalFinal').style.display='none';
+  document.getElementById('modalInputRow').style.display='flex';
+  document.getElementById('successNote').classList.remove('show');
+  document.getElementById('modalSendBtn').disabled=false;
+  const dots=document.getElementById('progressDots');dots.innerHTML='';
+  currentService.questions.forEach(()=>{const d=document.createElement('span');dots.appendChild(d);});
+  document.getElementById('modalOverlay').classList.add('active');
+  setTimeout(()=>{
+    addBubble('👋 ¡Hola! Cuéntanos sobre tu proyecto. Responde estas preguntas para dejar tu pedido listo.','bot');
+    setTimeout(askNext, 600);
+  }, 400);
+}
+
+function closeOrder(){document.getElementById('modalOverlay').classList.remove('active');}
+
+function updateDots(){
+  const dots=document.getElementById('progressDots').children;
+  for(let i=0;i<dots.length;i++) dots[i].classList.toggle('done',i<currentStep);
+}
+
+function addBubble(t,w){
+  const c=document.getElementById('chatArea'),b=document.createElement('div');
+  b.className='bubble '+w;
+  b.innerHTML=t.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  c.appendChild(b);c.scrollTop=c.scrollHeight;
+}
+
+function askNext(){
+  updateDots();
+  const chat=document.getElementById('chatArea'),typing=document.createElement('div');
+  typing.className='typing';typing.innerHTML='<span></span><span></span><span></span>';
+  chat.appendChild(typing);chat.scrollTop=chat.scrollHeight;
+  setTimeout(()=>{
+    typing.remove();
+    const q = currentService.questions[currentStep];
+    if (currentStep === currentService.questions.length - 1) {
+      const hint = document.createElement('div');
+      hint.className = 'discord-hint';
+      hint.innerHTML = '💡 <b>¿No estás en el servidor?</b> Únete primero: <a href="'+DISCORD_INVITE+'" target="_blank">discord.gg/bBQmzEUEvc</a> y luego escribe tu usuario exacto aquí.';
+      chat.appendChild(hint);
+    }
+    addBubble(q, 'bot');
+    document.getElementById('modalInput').focus();
+  }, 500);
+}
+
+async function submitAnswer(){
+  const input=document.getElementById('modalInput'),val=input.value.trim();
+  if(!val)return;
+  const btn=document.getElementById('modalSendBtn');
+  btn.disabled=true;
+  addBubble(val,'user');
+  const qIndex = currentStep;
+  const isDiscordQuestion = (qIndex === currentService.questions.length - 1);
+  const isPaymentQuestion = (qIndex === currentService.questions.length - 2);
+
+  answers.push(val);input.value='';currentStep++;
+
+  const goNext=()=>{
+    if(currentStep<currentService.questions.length){
+      setTimeout(askNext,350);
+    }else{
+      updateDots();
+      setTimeout(()=>showFinal(), 500);
+    }
+    btn.disabled=false;
+  };
+
+  if(isDiscordQuestion){
+    const chat=document.getElementById('chatArea');
+    const hint = chat.querySelector('.discord-hint');
+    if (hint) hint.remove();
+    const t=document.createElement('div');
+    t.className='typing';t.innerHTML='<span></span><span></span><span></span>';
+    chat.appendChild(t);chat.scrollTop=chat.scrollHeight;
+    try{
+      const r=await fetch(BOT_API_URL+'/api/verify-user',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:val})
+      });
+      const d=await r.json();
+      t.remove();
+      if(d.exists){
+        answers[answers.length-1]=d.username;
+        addBubble('✅ Verificado como <b>'+d.display_name+'</b> — gracias! Procesando tu pedido...','bot');
+        goNext();
+      }else{
+        currentStep--;answers.pop();
+        addBubble('❌ No encontramos a <b>'+val+'</b> en el servidor. Asegúrate de:<br>▸ Estar en nuestro Discord: <a class="inline-link" href="'+DISCORD_INVITE+'" target="_blank">discord.gg/bBQmzEUEvc</a><br>▸ Escribir tu nombre de usuario EXACTO (ej: enmanuelpg)<br><br>Intenta de nuevo cuando estés listo.','bot');
+        const hint2 = document.createElement('div');
+        hint2.className = 'discord-hint';
+        hint2.innerHTML = '💡 <b>¿Ya te uniste?</b> Escribe tu usuario exacto. Si aún no lo haces, únete primero: <a href="'+DISCORD_INVITE+'" target="_blank">discord.gg/bBQmzEUEvc</a>';
+        chat.appendChild(hint2);
+        btn.disabled=false;
+        document.getElementById('modalInput').focus();
+      }
+    }catch(e){
+      t.remove();currentStep--;answers.pop();
+      addBubble('⚠️ Error de conexión. Intenta de nuevo.','bot');
+      btn.disabled=false;
+      document.getElementById('modalInput').focus();
+    }
+  }else{
+    goNext();
+  }
+}
+
+async function showFinal(){
+  document.getElementById('modalInputRow').style.display='none';
+  document.getElementById('modalFinal').style.display='block';
+  currentTicketId=generateTicketId();
+  const nonPayment = answers.slice(0, -2);
+  const metodo = answers[answers.length-2] || '—';
+  const usuario = answers[answers.length-1] || '—';
+  let ticket = 'Ticket: ' + currentTicketId + '\n';
+  ticket += 'Servicio: ' + currentService.name + '\n';
+  ticket += '━━━━━━━━━━━━━━━━━━━\n';
+  nonPayment.forEach((a, i) => {
+    ticket += 'Detalle ' + (i+1) + ': ' + a + '\n';
+  });
+  ticket += '━━━━━━━━━━━━━━━━━━━\n';
+  ticket += 'Pago: ' + metodo + '\n';
+  ticket += 'Discord: ' + usuario + '\n';
+  ticket += 'Estado: Pendiente';
+  document.getElementById('ticketContent').textContent = ticket;
+
+  const note=document.getElementById('successNote');
+  note.classList.add('show');note.style.color='var(--text-muted)';note.textContent='⏳ Creando tu ticket en Discord...';
+
+  const r=await sendTicketToDiscord(currentTicketId, currentService, answers, detailQuestions);
+  if(r.ok){
+    note.style.color='var(--success)';
+    note.innerHTML='✅ <b>Pedido recibido!</b> Hemos creado un canal privado para ti.<br>📌 <a href="'+r.channel_url+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">'+r.channel_mention+'</a>';
+    const btn=document.getElementById('finalDiscordBtn');
+    if(btn){btn.href=r.channel_url;btn.textContent='🔗 Ir a mi ticket →';}
+  }else{
+    note.style.color='#fbbf24';
+    if(r.error==='USER_NOT_FOUND'){
+      note.innerHTML='⚠️ <b>No estás en el Discord.</b> Únete para que podamos contactarte: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/bBQmzEUEvc</a>';
+    }else{
+      note.innerHTML='⚠️ Error al crear el ticket. Copia el pedido y envíanoslo por Discord: <a href="'+DISCORD_INVITE+'" target="_blank" style="color:#60a5fa;text-decoration:underline;">discord.gg/bBQmzEUEvc</a>';
+    }
+  }
+}
+
+function copyTicket(){
+  const t=document.getElementById('ticketContent').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    const note=document.getElementById('successNote');
+    note.classList.add('show');
+    note.style.color='var(--success)';
+    note.textContent='✅ Copiado al portapapeles!';
+  }).catch(()=>{});
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeOrder();});
+</script>
+
+</body>
+</html>
