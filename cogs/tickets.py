@@ -301,11 +301,12 @@ class TicketPanelView(discord.ui.View):
         if not guild:
             await interaction.response.send_message("❌ Esto solo funciona en un servidor.", ephemeral=True)
             return
+        await interaction.response.defer(ephemeral=True)
         ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
         dummy_embed = discord.Embed(title=f"📦 {service_name}")
         ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name, category_id=PANEL_CATEGORY_ID)
         if not created:
-            await interaction.response.send_message(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
+            await interaction.followup.send(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
             return
         await ticket_channel.send(
             f"📝 **Cuéntanos más sobre tu solicitud de {service_name}**\n\n"
@@ -314,7 +315,7 @@ class TicketPanelView(discord.ui.View):
             f"▸ ¿Cuál es tu método de pago preferido?\n\n"
             f"Un miembro del equipo te atenderá en breve. 💙"
         )
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
             ephemeral=True
         )
