@@ -1,5 +1,6 @@
 import discord
 import asyncio
+import random
 import time
 from discord.ext import commands
 
@@ -19,8 +20,9 @@ class Welcome(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         self._call_count += 1
-        call_id = self._call_count
-        print(f"[WELCOME] CALL #{call_id} for member={member.id} name={member.display_name}", flush=True)
+        c = self._call_count
+        print(f"[WELCOME] CALL #{c} member={member.id}", flush=True)
+
         try:
             if member.guild.id != 1525894268651176159:
                 return
@@ -28,11 +30,11 @@ class Welcome(commands.Cog):
             now = time.time()
             last = self._recent.get(member.id, 0)
             if now - last < 120:
-                print(f"[WELCOME] CALL #{call_id} -> Dedup blocked", flush=True)
+                print(f"[WELCOME] CALL #{c} -> dedup blocked", flush=True)
                 return
             self._recent[member.id] = now
 
-            print(f"[WELCOME] CALL #{call_id} -> Processing", flush=True)
+            await asyncio.sleep(random.uniform(0, 3))
 
             channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
             ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
@@ -40,9 +42,9 @@ class Welcome(commands.Cog):
 
             if role:
                 try:
-                    await member.add_roles(role, reason="Autorol de bienvenida")
+                    await member.add_roles(role, reason="Autorol")
                 except Exception as e:
-                    print(f"[WELCOME] Role error: {e}", flush=True)
+                    print(f"[WELCOME] CALL #{c} -> role error: {e}", flush=True)
 
             if not channel:
                 return
@@ -61,13 +63,11 @@ class Welcome(commands.Cog):
                 ),
                 color=0x3b82f6
             )
-
             embed.set_thumbnail(url=guild_icon)
             if member.guild.banner:
                 embed.set_image(url=member.guild.banner.url)
             else:
                 embed.set_image(url="https://placehold.co/1200x400/0d1117/3b82f6?text=Bienvenido+a+ZentroxDev&font=montserrat")
-
             embed.add_field(
                 name="🤖 **¿Qué hacemos?**",
                 value=(
@@ -80,7 +80,6 @@ class Welcome(commands.Cog):
                 ),
                 inline=False
             )
-
             embed.add_field(
                 name="📌 **¿Cómo contratar?**",
                 value=(
@@ -90,7 +89,6 @@ class Welcome(commands.Cog):
                 ),
                 inline=False
             )
-
             embed.set_footer(
                 text="ZentroxDev © 2026 · Sin plantillas, sin límites",
                 icon_url=guild_icon
@@ -98,17 +96,26 @@ class Welcome(commands.Cog):
             embed.timestamp = discord.utils.utcnow()
 
             msg = await channel.send(f"¡{member.mention}!", embed=embed)
-            print(f"[WELCOME] CALL #{call_id} -> Channel sent {msg.id}", flush=True)
+            print(f"[WELCOME] CALL #{c} -> sent {msg.id}", flush=True)
 
             await asyncio.sleep(2)
 
+            is_winner = True
             async for old in channel.history(limit=15):
                 if old.id == msg.id:
                     continue
                 if old.author == self.bot.user and str(member.id) in old.content:
-                    await old.delete()
-                    print(f"[WELCOME] CALL #{call_id} -> Deleted dup {old.id}", flush=True)
-                    break
+                    if old.id < msg.id:
+                        is_winner = False
+                        print(f"[WELCOME] CALL #{c} -> lost to {old.id}", flush=True)
+                    else:
+                        print(f"[WELCOME] CALL #{c} -> deleting {old.id}", flush=True)
+                        await old.delete()
+
+            if not is_winner:
+                await msg.delete()
+                print(f"[WELCOME] CALL #{c} -> deleted our msg, another was first", flush=True)
+                return
 
             try:
                 dm = discord.Embed(
@@ -127,13 +134,13 @@ class Welcome(commands.Cog):
                 dm.set_thumbnail(url=guild_icon)
                 dm.set_footer(text="ZentroxDev © 2026 · Desarrollo profesional desde cero")
                 await member.send(embed=dm)
-                print(f"[WELCOME] CALL #{call_id} -> DM sent", flush=True)
+                print(f"[WELCOME] CALL #{c} -> DM sent", flush=True)
             except discord.Forbidden:
-                print(f"[WELCOME] CALL #{call_id} -> DM blocked", flush=True)
+                print(f"[WELCOME] CALL #{c} -> DM blocked", flush=True)
 
-            print(f"[WELCOME] CALL #{call_id} -> Done", flush=True)
+            print(f"[WELCOME] CALL #{c} -> done", flush=True)
         except Exception as e:
-            print(f"[WELCOME] CALL #{call_id} -> ERROR: {e}", flush=True)
+            print(f"[WELCOME] CALL #{c} -> ERROR: {e}", flush=True)
 
 
 async def setup(bot: commands.Bot):
