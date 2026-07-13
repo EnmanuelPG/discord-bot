@@ -617,24 +617,19 @@ class TicketPanelView(discord.ui.View):
                 )
                 return []
 
-        summary_lines = []
-        for i, (q, a) in enumerate(zip(questions, answers)):
-            clean_q = q.replace('**', '')
-            if ' ' in clean_q:
-                clean_q = clean_q.split(' ', 1)[1] if len(clean_q.split(' ', 1)) > 1 else clean_q
-            summary_lines.append(f"**{i+1}.** {clean_q}\n➡ {a}")
-
-        summary = (
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📋 **Resumen de tu pedido — {service_name}**\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            + "\n\n".join(summary_lines) +
-            "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✅ **¡Cuestionario completado!**\n"
-            "Un miembro del equipo revisará tus respuestas y te atenderá pronto.\n"
-            "Si necesitas agregar algo más, puedes escribir libremente en este canal."
+        done = discord.Embed(
+            title="Cuestionario completado",
+            description=(
+                f"Todas las respuestas han sido registradas correctamente.\n\n"
+                f"En breve un miembro del equipo revisara tu solicitud "
+                f"y te atendra en este canal.\n"
+                f"Mientras tanto, si necesitas agregar algo mas, "
+                f"puedes escribirlo aquí."
+            ),
+            color=0x2c3e50,
         )
-        await channel.send(summary)
+        done.set_footer(text="ZentroxDev © 2026")
+        await channel.send(embed=done)
         return answers
 
     async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
@@ -672,6 +667,7 @@ class TicketPanelView(discord.ui.View):
                 lines.append(f"**Pregunta {i+1}:** {clean}\n**R:** {a}")
             detalle = "\n\n".join(lines)
             metodo = answers[-1] if answers else "No especificado"
+            print(f"[TICKET] Enviando a pedidos: {ticket_id} ({service_name})", flush=True)
             await send_embed_to_pedidos(guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
 
 SERVICE_QUESTIONS = {
