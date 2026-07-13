@@ -741,70 +741,77 @@ const serviceThumbnails = {
 const services = {
   bots: {
     name:'Bots Personalizados', icon:'🤖',
+    prices:['**Básico** `$10` — Bot con hasta 5 comandos','**Estándar** `$20` — Bot con 10+ comandos, economía o moderación','**Profesional** `$35` — Bot completo con BD, logs, niveles','**Premium** `$60+` — Bot con panel web, dashboard, APIs'],
     questions:[
-      '¿Qué tipo de bot necesitas? (moderación, economía, tickets, IA, roleplay, nivelación, música, etc.)',
-      'Describe detalladamente las funciones principales que debe tener el bot',
-      '¿Tienes algún ejemplo, referencia o bot similar en el que inspirarte? (puedes mencionar nombres o características)',
+      '¿Qué tipo de bot necesitas? (moderación, economía, tickets, IA, etc.)',
+      'Describe las funciones principales que debe tener',
+      '¿Tienes algún ejemplo o referencia?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   web: {
     name:'Páginas Web', icon:'🌐',
+    prices:['**Landing Page** `$15` — 1 página, diseño responsive','**Institucional** `$25` — 3-5 páginas, formulario, SEO','**Profesional** `$45` — Panel admin, BD, auth','**Tienda / App** `$80+` — E-commerce, pasarela de pago, APIs'],
     questions:[
-      '¿Qué tipo de página web necesitas? (landing page, tienda online, panel de control, blog, portafolio, etc.)',
-      'Describe las secciones o páginas que debe incluir (ej: inicio, servicios, contacto, galería, etc.)',
-      '¿Tienes algún diseño, referencia o ejemplo de lo que buscas? (colores, estilo, páginas de referencia)',
+      '¿Qué tipo de página web necesitas? (landing page, tienda, panel, blog, etc.)',
+      'Describe las secciones que debe incluir (inicio, servicios, contacto, etc.)',
+      '¿Tienes algún diseño o referencia de lo que buscas?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   texturas: {
     name:'Texturas de ER:LC', icon:'🪄',
+    prices:['**Pack básico** `$10` — 2 texturas (32×32)','**Pack estándar** `$15` — 5 texturas (64×64)','**Pack premium** `$25` — 10 texturas + variantes','**Pack completo** `$40` — Texturas para todo tu servidor'],
     questions:[
-      '¿Qué tipo de textura deseas? (policía, EMS, mecánico, taxi, juez, personalizada, etc.)',
-      'Describe los colores, estilo y detalles específicos que debe tener la textura',
-      '¿Tienes imágenes de referencia o ejemplos para guiar el diseño?',
+      '¿Qué tipo de textura deseas? (policía, EMS, mecánico, taxi, etc.)',
+      'Describe los colores y estilo que debe tener',
+      '¿Tienes imágenes de referencia?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   mapas: {
     name:'Mapas personalizados ER:LC', icon:'🗺️',
+    prices:['**Mapa pequeño** `$20` — Estación, comisaría o base','**Mapa mediano** `$40` — Mapa con interiores detallados','**Mapa grande** `$70` — Mapa extenso + edificios','**Personalizado** `$100+` — Diseño 100% desde 0'],
     questions:[
-      '¿Qué tipo de mapa deseas? (base, ciudad, comisaría, hospital, academia, etc.)',
-      'Describe el tamaño, estilo y características principales que debe incluir',
-      '¿Tienes referencias visuales, ejemplos o ideas concretas para el diseño?',
+      '¿Qué tipo de mapa deseas? (base, ciudad, comisaría, hospital, etc.)',
+      'Describe el tamaño y características principales',
+      '¿Tienes referencias visuales o ideas concretas?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   discord: {
     name:'Servicios de Discord', icon:'🛠️',
+    prices:['**Configuración** `$10` — Roles, canales, bots, bienvenidas','**Moderación** `$20` — Warns, logs, tickets, anti-raid','**Comunidad** `$30` — Todo + economía, niveles, sorteos','**Servidor completo** `$50+` — Con bots a medida'],
     questions:[
-      '¿Qué necesitas para tu servidor de Discord? (bots personalizados, configuración, diseño de canales, paneles, etc.)',
-      'Describe en detalle lo que requieres y para qué tipo de servidor es',
-      '¿Tienes algún ejemplo o referencia de lo que quieres lograr?',
+      '¿Qué necesitas para tu servidor? (bots, configuración, diseño, etc.)',
+      'Describe en detalle lo que requieres',
+      '¿Tienes algún ejemplo de lo que quieres lograr?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   documentos: {
     name:'Redacción de documentos ER:LC', icon:'📝',
+    prices:['**Documento simple** `$10` — Plantilla de reglas o rangos','**Documento completo** `$15` — Reglamento + sanciones + lore','**Pack documentos** `$25` — Sistema legal completo','**Personalizado** `$35+` — Redacción profesional + guías'],
     questions:[
-      '¿Qué tipo de documento necesitas? (reglamento, manual, guión, reporte, normativa, etc.)',
-      'Describe el contenido, la extensión y el formato que debe tener',
-      '¿Tienes algún ejemplo, formato o documento de referencia?',
+      '¿Qué tipo de documento necesitas? (reglamento, manual, guión, etc.)',
+      'Describe el contenido y formato que debe tener',
+      '¿Tienes algún documento de referencia?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
   },
   diseno: {
     name:'Diseño gráfico', icon:'🎨',
+    prices:['**Logo / Icono** `$10` — Diseño simple con tu idea','**Banner / Portada** `$15` — Banner para servidor o redes','**Pack gráfico** `$25` — Logo + banner + emojis + fondos','**Branding completo** `$40+` — Identidad visual completa'],
     questions:[
-      '¿Qué tipo de diseño necesitas? (logo, banner, thumbnail, portada, interfaz, identidad visual, etc.)',
-      'Describe los colores, estilo, tipografía y elementos que debe incluir',
-      '¿Tienes referencias visuales, moodboard o ejemplos de lo que buscas?',
+      '¿Qué tipo de diseño necesitas? (logo, banner, thumbnail, etc.)',
+      'Describe colores, estilo y elementos que debe incluir',
+      '¿Tienes referencias visuales o ejemplos?',
       '¿Cuál es tu método de pago? (PayPal, Crypto, Transferencia, etc.)',
       'Por último, necesitamos tu **usuario de Discord** para contactarte. Escribe exactamente tu nombre de usuario (ej: enmanuelpg).\n\n⚠️ **Importante:** Debes estar en nuestro servidor de Discord para poder procesar tu pedido.'
     ]
@@ -929,8 +936,11 @@ function openOrder(k){
   currentService.questions.forEach(()=>{const d=document.createElement('span');dots.appendChild(d);});
   document.getElementById('modalOverlay').classList.add('active');
   setTimeout(()=>{
-    addBubble('👋 ¡Hola! Cuéntanos sobre tu proyecto. Responde estas preguntas para dejar tu pedido listo.','bot');
-    setTimeout(askNext, 600);
+    let welcome = '👋 ¡Hola! Cuéntanos sobre tu proyecto.\n\n**💰 Precios disponibles para ' + currentService.name + ':**\n';
+    currentService.prices.forEach(p => { welcome += p + '\n'; });
+    welcome += '\n*Más abajo puedes indicarnos qué paquete te interesa.*';
+    addBubble(welcome, 'bot');
+    setTimeout(askNext, 1200);
   }, 400);
 }
 
