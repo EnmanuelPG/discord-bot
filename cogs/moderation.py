@@ -7,8 +7,8 @@ from datetime import timedelta, datetime
 
 WARNINGS_FILE = "warnings.json"
 MOD_CATEGORY_NAME = "🛡️ Moderación"
-SANCTIONS_CHANNEL_NAME = "🔒┃sanciones"
-APPEALS_CHANNEL_NAME = "📌┃apelaciones"
+SANCTIONS_CHANNEL_NAME = "sanciones"
+APPEALS_CHANNEL_NAME = "apelaciones"
 
 SANCTIONS_CHANNEL_ID = None
 APPEALS_CHANNEL_ID = None
@@ -96,27 +96,39 @@ class Moderation(commands.Cog):
         guild = interaction.guild
 
         existing = discord.utils.get(guild.categories, name=MOD_CATEGORY_NAME)
-        if existing:
-            category = existing
-        else:
-            category = await guild.create_category(MOD_CATEGORY_NAME, reason="Creacion categoria moderacion")
+        category = existing or await guild.create_category(MOD_CATEGORY_NAME, reason="Creacion categoria moderacion")
 
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True),
-        }
+        staff_perms = discord.PermissionOverwrite(
+            view_channel=True, send_messages=True, read_message_history=True
+        )
+        everyone_perms_view = discord.PermissionOverwrite(
+            view_channel=True, send_messages=False, read_message_history=True
+        )
+        everyone_perms_full = discord.PermissionOverwrite(
+            view_channel=True, send_messages=True, read_message_history=True
+        )
 
-        sanc = discord.utils.get(guild.channels, name=SANCTIONS_CHANNEL_NAME.split("┃")[1] if "┃" in SANCTIONS_CHANNEL_NAME else SANCTIONS_CHANNEL_NAME)
+        bot_perms = discord.PermissionOverwrite(
+            view_channel=True, send_messages=True, manage_channels=True, read_message_history=True
+        )
+
+        sanc_name = f"🔒┃{SANCTIONS_CHANNEL_NAME}"
+        sanc = discord.utils.get(guild.channels, name=sanc_name)
         if not sanc:
-            sanc = await guild.create_text_channel(SANCTIONS_CHANNEL_NAME, category=category, overwrites=overwrites, reason="Canal de sanciones")
+            sanc = await guild.create_text_channel(
+                sanc_name, category=category,
+                overwrites={guild.default_role: everyone_perms_view, guild.me: bot_perms},
+                reason="Canal de sanciones"
+            )
 
-        apel = discord.utils.get(guild.channels, name=APPEALS_CHANNEL_NAME.split("┃")[1] if "┃" in APPEALS_CHANNEL_NAME else APPEALS_CHANNEL_NAME)
+        apel_name = f"📌┃{APPEALS_CHANNEL_NAME}"
+        apel = discord.utils.get(guild.channels, name=apel_name)
         if not apel:
-            overwrites_apel = {
-                guild.default_role: discord.PermissionOverwrite(view_channel=True, send_messages=True),
-                guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True),
-            }
-            apel = await guild.create_text_channel(APPEALS_CHANNEL_NAME, category=category, overwrites=overwrites_apel, reason="Canal de apelaciones")
+            apel = await guild.create_text_channel(
+                apel_name, category=category,
+                overwrites={guild.default_role: everyone_perms_full, guild.me: bot_perms},
+                reason="Canal de apelaciones"
+            )
 
         global SANCTIONS_CHANNEL_ID, APPEALS_CHANNEL_ID
         SANCTIONS_CHANNEL_ID = sanc.id
@@ -126,12 +138,14 @@ class Moderation(commands.Cog):
         await interaction.followup.send(
             f"✅ Moderacion configurada:\n"
             f"{category.mention}\n"
-            f"{sanc.mention} — Registro de sanciones\n"
-            f"{apel.mention} — Apelaciones",
+            f"{sanc.mention} — visible, solo staff escribe\n"
+            f"{apel.mention} — publico para apelar",
             ephemeral=True
         )
 
-    @app_commands.command(name="mute", description="Mutea a un usuario por tiempo (staff)")
+    mod = app_commands.Group(name="mod", description="Comandos de moderacion")
+
+    @mod.command(name="mute", description="Silencia a un usuario por tiempo")
     async def mute(self, interaction: discord.Interaction, usuario: discord.Member, minutos: int, razon: str = None):
         if not interaction.guild or not self._es_staff(interaction.user):
             return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
@@ -144,7 +158,7 @@ class Moderation(commands.Cog):
 
         try:
             await usuario.timeout(timedelta(minutes=minutos), reason=razon)
-            txt = f"🔇 **{usuario.mention} muteado por {minutos} minuto(s)**"
+            txt = f"🔇 **{usuario.mention} silenciado por {minutos} minuto(s)**"
             if razon:
                 txt += f"\n📝 Razon: {razon}"
             await interaction.response.send_message(txt)
@@ -162,7 +176,7 @@ class Moderation(commands.Cog):
         except Exception as e:
             await interaction.response.send_message(f"❌ Error al mutear: {e}", ephemeral=True)
 
-    @app_commands.command(name="unmute", description="Quita el mute a un usuario (staff)")
+    @mod.command(name="unmute", description="Quita el silencio a un usuario")
     async def unmute(self, interaction: discord.Interaction, usuario: discord.Member):
         if not interaction.guild or not self._es_staff(interaction.user):
             return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
@@ -173,7 +187,7 @@ class Moderation(commands.Cog):
 
         try:
             await usuario.timeout(None)
-            await interaction.response.send_message(f"🔊 **{usuario.mention} ya no esta muteado.**")
+            await interaction.response.send_message(f"🔊 **{usuario.mention} ya no esta silenciado.**")
             embed = discord.Embed(
                 title="🔊 Unmute",
                 color=0x22c55e,
@@ -185,7 +199,7 @@ class Moderation(commands.Cog):
         except Exception as e:
             await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
 
-    @app_commands.command(name="warn", description="Anade un regano/advertencia a un usuario (staff)")
+    @mod.command(name="warn", description="Anade un regano a un usuario")
     async def warn(self, interaction: discord.Interaction, usuario: discord.Member, razon: str = None):
         if not interaction.guild or not self._es_staff(interaction.user):
             return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
@@ -194,18 +208,18 @@ class Moderation(commands.Cog):
 
         total = _add_warning(interaction.guild.id, usuario.id, interaction.user.id, razon)
         embed = discord.Embed(
-            title="⚠️ Regano / Advertencia",
+            title="⚠️ Regano",
             description=f"**Usuario:** {usuario.mention}\n**Moderador:** {interaction.user.mention}",
             color=0xf59e0b,
         )
         if razon:
             embed.add_field(name="📝 Razon", value=razon, inline=False)
-        embed.add_field(name="📊 Total de reganos", value=str(total), inline=False)
+        embed.add_field(name="📊 Total", value=str(total), inline=False)
         embed.set_footer(text=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
         await interaction.response.send_message(embed=embed)
 
         log = discord.Embed(
-            title="⚠️ Regano / Advertencia",
+            title="⚠️ Regano",
             color=0xf59e0b,
             timestamp=datetime.utcnow(),
         )
@@ -219,7 +233,7 @@ class Moderation(commands.Cog):
         if total == 3:
             try:
                 await usuario.timeout(timedelta(hours=1), reason="3 reganos automatico")
-                await interaction.channel.send(f"🔇 **{usuario.mention} muteado 1 hora por acumular 3 reganos.**")
+                await interaction.channel.send(f"🔇 **{usuario.mention} silenciado 1h por 3 reganos.**")
                 auto = discord.Embed(
                     title="🔇 Auto-mute (3 reganos)",
                     color=0xef4444,
@@ -231,14 +245,14 @@ class Moderation(commands.Cog):
             except Exception:
                 pass
 
-    @app_commands.command(name="clear-warnings", description="Elimina todos los reganos de un usuario (staff)")
+    @mod.command(name="clear-warnings", description="Elimina los reganos de un usuario")
     async def clear_warnings(self, interaction: discord.Interaction, usuario: discord.Member):
         if not interaction.guild or not self._es_staff(interaction.user):
             return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
         _clear_warnings(interaction.guild.id, usuario.id)
         await interaction.response.send_message(f"✅ Reganos de **{usuario.mention}** eliminados.")
 
-    @app_commands.command(name="warnings", description="Muestra los reganos de un usuario")
+    @mod.command(name="warnings", description="Muestra los reganos de un usuario")
     async def warnings(self, interaction: discord.Interaction, usuario: discord.Member):
         if not interaction.guild:
             return await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
@@ -249,9 +263,9 @@ class Moderation(commands.Cog):
 
         embed = discord.Embed(
             title=f"⚠️ Reganos de {usuario.display_name}",
-            description=f"**Total: {len(warns)}**",
             color=0xf59e0b,
         )
+        embed.description = f"**Total: {len(warns)}**"
         for i, w in enumerate(warns, 1):
             mod = interaction.guild.get_member(int(w["mod"]))
             mod_name = mod.mention if mod else f"<@{w['mod']}>"
