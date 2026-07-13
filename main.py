@@ -207,7 +207,7 @@ async def run_bot():
         print("  El cog 'ai_chat' no estará disponible hasta que")
         print("  agregues GEMINI_API_KEY en Railway.")
         print("=" * 60)
-    for cog in ("cogs.music", "cogs.ai_chat", "cogs.tickets", "cogs.welcome", "cogs.roles", "cogs.moderation"):
+    for cog in ("cogs.music", "cogs.ai_chat", "cogs.tickets", "cogs.welcome", "cogs.roles", "cogs.moderation", "cogs.help"):
         try:
             await bot.load_extension(cog)
         except Exception as e:

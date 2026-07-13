@@ -161,7 +161,8 @@ class Moderation(commands.Cog):
             f"✅ Moderacion configurada:\n"
             f"{category.mention}\n"
             f"{sanc.mention} — visible, solo staff escribe\n"
-            f"{apel.mention} — publico para apelar",
+            f"{apel.mention} — publico para apelar\n\n"
+            f"💡 Usa `/setup-ticket-log` en el canal donde quieras los logs de tickets.",
             ephemeral=True
         )
 

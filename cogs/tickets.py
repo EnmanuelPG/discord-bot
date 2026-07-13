@@ -1,12 +1,14 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 import asyncio
 import random
 import string
 import re
 import io
-from datetime import date
+import os
+import json
+from datetime import date, datetime, timedelta
 
 PEDIDOS_CHANNEL_ID = 1525894272988217536
 DEVELOPER_ROLE_ID = 1525894268651176166
@@ -15,6 +17,9 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
+TICKET_LOG_CHANNEL_ID = None
+TICKET_DAYS_TO_CLOSE = 7
+TICKET_CONFIG_FILE = "ticket_config.json"
 
 SERVICE_CHANNELS = {
     "Bots Personalizados": 1526350101419786361,
@@ -377,6 +382,31 @@ async def create_ticket_channel(guild, ticket_id, embed, username, category_id=N
     await ticket_channel.send(content=welcome_text, embed=welcome_embed, view=view)
     return ticket_channel, True
 
+
+def _load_ticket_config():
+    global TICKET_LOG_CHANNEL_ID
+    if not os.path.exists(TICKET_CONFIG_FILE):
+        return
+    try:
+        with open(TICKET_CONFIG_FILE) as f:
+            cfg = json.load(f)
+            TICKET_LOG_CHANNEL_ID = cfg.get("log_channel")
+    except Exception:
+        pass
+
+def _save_ticket_config():
+    with open(TICKET_CONFIG_FILE, "w") as f:
+        json.dump({"log_channel": TICKET_LOG_CHANNEL_ID}, f)
+
+async def _log_ticket_event(guild, embed):
+    if not TICKET_LOG_CHANNEL_ID:
+        return
+    ch = guild.get_channel(TICKET_LOG_CHANNEL_ID)
+    if ch:
+        try:
+            await ch.send(embed=embed)
+        except Exception:
+            pass
 
 async def send_embed_to_pedidos(bot, guild, bot_user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel):
     pedidos_channel = bot.get_channel(PEDIDOS_CHANNEL_ID)
@@ -927,6 +957,8 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        _load_ticket_config()
+        self.auto_close_loop.start()
 
     def _validar_respuesta(self, content):
         content = content.strip()
@@ -1046,6 +1078,17 @@ class Tickets(commands.Cog):
             metodo = answers[-1] if answers else "No especificado"
             print(f"[TICKET] Enviando a pedidos: {ticket_id} ({service_name})", flush=True)
             await send_embed_to_pedidos(self.bot, guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
+
+            log_embed = discord.Embed(
+                title="🎫 Ticket abierto",
+                color=0x22c55e,
+                timestamp=discord.utils.utcnow(),
+            )
+            log_embed.add_field(name="Ticket", value=ticket_id, inline=True)
+            log_embed.add_field(name="Servicio", value=service_name, inline=True)
+            log_embed.add_field(name="Cliente", value=interaction.user.mention, inline=True)
+            log_embed.add_field(name="Canal", value=ticket_channel.mention, inline=True)
+            await _log_ticket_event(guild, log_embed)
 
     async def _protect_bot_role(self, guild: discord.Guild):
         """Mueve el rol del bot al tope de la jerarquía para evitar que admins lo expulsen."""
@@ -1211,6 +1254,70 @@ class Tickets(commands.Cog):
         )
         await interaction.response.send_message("✅ Canal renombrado a `📦┃pedidos`.", ephemeral=True)
 
+    @app_commands.command(name="setup-ticket-log", description="Configura el canal para logs de tickets")
+    async def setup_ticket_log(self, interaction: discord.Interaction):
+        global TICKET_LOG_CHANNEL_ID
+        TICKET_LOG_CHANNEL_ID = interaction.channel_id
+        _save_ticket_config()
+        await interaction.response.send_message(f"✅ Logs de tickets se enviaran a {interaction.channel.mention}.", ephemeral=True)
+
+    @tasks.loop(hours=12)
+    async def auto_close_loop(self):
+        if self.bot.is_ready():
+            guild = self.bot.get_guild(1525894268651176159)
+            if not guild:
+                return
+            category = guild.get_channel(PANEL_CATEGORY_ID)
+            if not category or not isinstance(category, discord.CategoryChannel):
+                return
+            now = discord.utils.utcnow()
+            for channel in category.text_channels:
+                age = (now - channel.created_at).days
+                if age >= TICKET_DAYS_TO_CLOSE:
+                    async for msg in channel.history(limit=1):
+                        last = msg.created_at
+                        break
+                    else:
+                        last = channel.created_at
+                    inactive = (now - last).days
+                    if inactive >= 1:
+                        try:
+                            await channel.send(f"⏰ Este ticket tiene **{age} días** abierto. Se cerrará en **24h** por inactividad.")
+                        except Exception:
+                            pass
+                        await asyncio.sleep(86400)
+                        try:
+                            async for msg in channel.history(limit=1):
+                                last2 = msg.created_at
+                                break
+                            else:
+                                last2 = channel.created_at
+                            if (now - last2).days >= 1:
+                                creator_id = 0
+                                if channel.topic:
+                                    for part in channel.topic.split("|"):
+                                        if part.startswith("creator:"):
+                                            try:
+                                                creator_id = int(part.split(":", 1)[1])
+                                            except ValueError:
+                                                pass
+                                await send_ticket_transcript(channel, creator_id, self.bot.user.id, channel.name.upper())
+                                await channel.delete(reason="Auto-cierre por inactividad")
+                                log_embed = discord.Embed(
+                                    title="🔒 Ticket cerrado (auto)",
+                                    color=0xef4444,
+                                    timestamp=discord.utils.utcnow(),
+                                )
+                                log_embed.add_field(name="Canal", value=channel.name, inline=True)
+                                log_embed.add_field(name="Razon", value="Inactividad", inline=True)
+                                await _log_ticket_event(guild, log_embed)
+                        except Exception:
+                            pass
+
+    @auto_close_loop.before_loop
+    async def before_auto_close(self):
+        await self.bot.wait_until_ready()
+
     @app_commands.command(name="close", description="Cierra el ticket actual (solo staff o creador)")
     async def close(self, interaction: discord.Interaction):
         try:
@@ -1248,6 +1355,19 @@ class Tickets(commands.Cog):
             ticket_id = interaction.channel.name.upper()
             await send_ticket_transcript(interaction.channel, creator_id, interaction.user.id, ticket_id)
             await interaction.followup.send(f"🔒 Cerrando ticket... Solicitado por {interaction.user.mention}", ephemeral=True)
+
+            log_embed = discord.Embed(
+                title="🔒 Ticket cerrado",
+                color=0xef4444,
+                timestamp=discord.utils.utcnow(),
+            )
+            log_embed.add_field(name="Ticket", value=ticket_id, inline=True)
+            log_embed.add_field(name="Cerrado por", value=interaction.user.mention, inline=True)
+            if creator_id:
+                creator = interaction.guild.get_member(creator_id)
+                log_embed.add_field(name="Creador", value=creator.mention if creator else f"<@{creator_id}>", inline=True)
+            await _log_ticket_event(interaction.guild, log_embed)
+
             await asyncio.sleep(5)
             await interaction.channel.delete(reason=f"Ticket cerrado por {interaction.user.name} ({interaction.user.id})")
         except Exception:
