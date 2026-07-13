@@ -1,4 +1,5 @@
 import discord
+import asyncio
 import time
 from discord.ext import commands
 
@@ -11,17 +12,19 @@ class Welcome(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._recent_joins = {}
+        self._lock = asyncio.Lock()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member.guild.id != 1525894268651176159:
             return
 
-        now = time.time()
-        last = self._recent_joins.get(member.id, 0)
-        if now - last < DEDUP_SECONDS:
-            return
-        self._recent_joins[member.id] = now
+        async with self._lock:
+            now = time.time()
+            last = self._recent_joins.get(member.id, 0)
+            if now - last < DEDUP_SECONDS:
+                return
+            self._recent_joins[member.id] = now
 
         channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
         if not channel:
@@ -99,6 +102,19 @@ class Welcome(commands.Cog):
             await member.send(embed=dm)
         except discord.Forbidden:
             pass
+
+    async def _cleanup_loop(self):
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            await asyncio.sleep(120)
+            cutoff = time.time() - DEDUP_SECONDS
+            async with self._lock:
+                stale = [uid for uid, ts in self._recent_joins.items() if ts < cutoff]
+                for uid in stale:
+                    del self._recent_joins[uid]
+
+    async def cog_load(self):
+        self.bot.loop.create_task(self._cleanup_loop())
 
 
 async def setup(bot: commands.Bot):
