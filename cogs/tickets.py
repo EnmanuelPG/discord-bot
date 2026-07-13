@@ -21,14 +21,70 @@ MAX_TICKETS_PER_DAY = 3
 _user_daily_tickets = {}
 
 SERVICE_PRICES = {
-    "Bots Personalizados": {"rango": "$10 — $100 USD", "monthy": "$15/mes"},
-    "Páginas Web": {"rango": "$15 — $120 USD", "monthy": "$15/mes"},
-    "Texturas de ER:LC": {"rango": "$3 — $30 USD", "monthy": None},
-    "Mapas personalizados ER:LC": {"rango": "$15 — $120 USD", "monthy": None},
-    "Servicios de Discord": {"rango": "$10 — $50 USD", "monthy": "$15/mes"},
-    "Redacción de documentos ER:LC": {"rango": "$5 — $30 USD", "monthy": None},
-    "Diseño gráfico": {"rango": "$3 — $50 USD", "monthy": None},
-    "Alianza": {"rango": None, "monthy": None},
+    "Bots Personalizados": {
+        "paquetes": [
+            "**Básico** `$10` — 1 comando simple (ej: ping, info)",
+            "**Estándar** `$25` — 3-5 comandos + configuración básica",
+            "**Profesional** `$50` — Sistema completo (economía, moderación, logs)",
+            "**Empresarial** `$100+` — Bot a medida con panel web, BD, APIs",
+        ],
+        "monthy": "Estándar `$10/mes` · Profesional `$20/mes` · Empresarial `$40/mes`"
+    },
+    "Páginas Web": {
+        "paquetes": [
+            "**Landing Page** `$15` — 1 página, diseño responsivo",
+            "**Institucional** `$35` — 3-5 páginas, formulario, SEO básico",
+            "**Profesional** `$60` — Panel admin, BD, auth, dashboard",
+            "**Tienda / App** `$120+` — E-commerce, pasarela de pago, APIs",
+        ],
+        "monthy": "Desde `$10/mes` (hosting + dominio + mantenimiento)"
+    },
+    "Texturas de ER:LC": {
+        "paquetes": [
+            "**Pack básico** `$3` — 1 textura simple (16×16)",
+            "**Pack estándar** `$10` — 5 texturas (32×32)",
+            "**Pack premium** `$20` — 10 texturas (64×64) + variantes",
+            "**Pack completo** `$30` — Texturas ilimitadas para todo tu server",
+        ],
+        "monthy": None
+    },
+    "Mapas personalizados ER:LC": {
+        "paquetes": [
+            "**Mapa pequeño** `$15` — Estación, comisaría o base pequeña",
+            "**Mapa mediano** `$40` — Mapa completo con interior detallado",
+            "**Mapa grande** `$80` — Mapa extenso + edificios + paisaje",
+            "**Mapa personalizado** `$120+` — Diseño 100% desde 0, a tu medida",
+        ],
+        "monthy": None
+    },
+    "Servicios de Discord": {
+        "paquetes": [
+            "**Configuración** `$10` — Roles, canales, bots, bienvenidas",
+            "**Moderación** `$20` — Sistema de warns, logs, tickets, anti-raid",
+            "**Comunidad** `$35` — Todo lo anterior + economía, niveles, sorteos",
+            "**Servidor Premium** `$50+` — Servidor completo con bots a medida",
+        ],
+        "monthy": "`$10/mes` — Actualizaciones + soporte + nuevas features"
+    },
+    "Redacción de documentos ER:LC": {
+        "paquetes": [
+            "**Documento simple** `$5` — Plantilla de reglas o rangos",
+            "**Documento completo** `$15` — Reglamento + sanciones + rangos + lore",
+            "**Pack de documentos** `$25` — Todo el sistema legal de tu servidor",
+            "**Personalizado** `$30+` — Redacción profesional con glosario y guías",
+        ],
+        "monthy": None
+    },
+    "Diseño gráfico": {
+        "paquetes": [
+            "**Logo / Icono** `$3` — Diseño simple con tu idea",
+            "**Banner / Portada** `$10` — Banner para servidor o redes",
+            "**Pack gráfico** `$25` — Logo + banner + emojis + fondos",
+            "**Diseño profesional** `$50+` — Branding completo, mockups, múltiples formatos",
+        ],
+        "monthy": None
+    },
+    "Alianza": {"paquetes": None, "monthy": None},
 }
 
 MAINTENANCE_PLANS = {
@@ -628,7 +684,7 @@ PRICING_EMBED_COLOR = 0x34d399
 
 async def send_pricing_info(channel, service_name: str):
     prices = SERVICE_PRICES.get(service_name)
-    if not prices or prices["rango"] is None:
+    if not prices or prices["paquetes"] is None:
         return
 
     embed = discord.Embed(
@@ -636,22 +692,17 @@ async def send_pricing_info(channel, service_name: str):
         description=f"Servicio seleccionado: **{service_name}**",
         color=PRICING_EMBED_COLOR
     )
-    embed.add_field(name="Precio estimado", value=prices["rango"], inline=False)
+
+    paquetes_text = "\n".join(prices["paquetes"])
+    embed.add_field(name="📦 Paquetes disponibles", value=paquetes_text, inline=False)
 
     if prices["monthy"]:
         embed.add_field(
             name="🔄 Mantenimiento mensual",
-            value=f"Desde {prices['monthy']} — incluye hosting 24/7, soporte y actualizaciones.\n"
-                  "Pregunta a nuestro staff por los detalles.",
+            value=f"{prices['monthy']}\nIncluye hosting 24/7, soporte y actualizaciones.",
             inline=False
         )
 
-    plans = "\n".join(f"**{k}** — {v}" for k, v in MAINTENANCE_PLANS.items())
-    embed.add_field(
-        name="📋 Planes de mantenimiento",
-        value=plans,
-        inline=False
-    )
     embed.set_footer(text="ZentroxDev · Precios referenciales, pueden variar según el proyecto")
 
     await channel.send(embed=embed)
