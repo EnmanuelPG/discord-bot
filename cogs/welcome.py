@@ -12,6 +12,8 @@ INSTANCE_ID = uuid.uuid4().hex[:8]
 
 
 class Welcome(commands.Cog):
+    _processing = set()
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._lock = asyncio.Lock()
@@ -24,6 +26,11 @@ class Welcome(commands.Cog):
                 return
 
             print(f"[WELCOME] on_member_join: member={member.id} name={member.display_name} instance={INSTANCE_ID}")
+
+            if member.id in self._processing:
+                print(f"[WELCOME] Duplicate blocked (_processing set) for {member.id}")
+                return
+            self._processing.add(member.id)
 
             channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
             ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
@@ -138,8 +145,10 @@ class Welcome(commands.Cog):
                 print(f"[WELCOME] DM blocked for {member.id}")
 
             print(f"[WELCOME] Done processing {member.id} (instance={INSTANCE_ID})")
+            self._processing.discard(member.id)
         except Exception as e:
             print(f"[WELCOME] UNHANDLED ERROR for {member.id}: {e}")
+            self._processing.discard(member.id)
 
 
 async def setup(bot: commands.Bot):
