@@ -48,11 +48,17 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="mute", description="Mutea a un usuario por tiempo")
-    @app_commands.default_permissions(moderate_members=True)
+    def _es_staff(self, member: discord.Member) -> bool:
+        return (
+            member.guild_permissions.administrator
+            or member.guild_permissions.moderate_members
+            or member.guild_permissions.manage_messages
+        )
+
+    @app_commands.command(name="mute", description="Mutea a un usuario por tiempo (staff)")
     async def mute(self, interaction: discord.Interaction, usuario: discord.Member, minutos: int, razon: str = None):
-        if not interaction.guild:
-            return await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
+        if not interaction.guild or not self._es_staff(interaction.user):
+            return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
         if not interaction.guild.me.guild_permissions.moderate_members:
             return await interaction.response.send_message("❌ No tengo permiso para mutear.", ephemeral=True)
         if usuario.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
@@ -69,11 +75,25 @@ class Moderation(commands.Cog):
         except Exception as e:
             await interaction.response.send_message(f"❌ Error al mutear: {e}", ephemeral=True)
 
-    @app_commands.command(name="warn", description="Añade un regaño/advertencia a un usuario")
-    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.command(name="unmute", description="Quita el mute a un usuario (staff)")
+    async def unmute(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.guild or not self._es_staff(interaction.user):
+            return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
+        if not interaction.guild.me.guild_permissions.moderate_members:
+            return await interaction.response.send_message("❌ No tengo permiso.", ephemeral=True)
+        if usuario.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
+            return await interaction.response.send_message("❌ No puedes quitar mute a alguien con igual o mayor rol.", ephemeral=True)
+
+        try:
+            await usuario.timeout(None)
+            await interaction.response.send_message(f"🔊 **{usuario.mention} ya no está muteado.**")
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+
+    @app_commands.command(name="warn", description="Añade un regaño/advertencia a un usuario (staff)")
     async def warn(self, interaction: discord.Interaction, usuario: discord.Member, razon: str = None):
-        if not interaction.guild:
-            return await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
+        if not interaction.guild or not self._es_staff(interaction.user):
+            return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
         if usuario.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
             return await interaction.response.send_message("❌ No puedes advertir a alguien con igual o mayor rol.", ephemeral=True)
 
@@ -91,10 +111,17 @@ class Moderation(commands.Cog):
 
         if total == 3:
             try:
-                await usuario.timeout(timedelta(hours=1), reason=f"3 regaños automático")
+                await usuario.timeout(timedelta(hours=1), reason="3 regaños automático")
                 await interaction.channel.send(f"🔇 **{usuario.mention} muteado 1 hora por acumular 3 regaños.**")
             except Exception:
                 pass
+
+    @app_commands.command(name="clear-warnings", description="Elimina todos los regaños de un usuario (staff)")
+    async def clear_warnings(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.guild or not self._es_staff(interaction.user):
+            return await interaction.response.send_message("❌ No tienes permiso.", ephemeral=True)
+        _clear_warnings(interaction.guild.id, usuario.id)
+        await interaction.response.send_message(f"✅ Regaños de **{usuario.mention}** eliminados.")
 
     @app_commands.command(name="warnings", description="Muestra los regaños de un usuario")
     async def warnings(self, interaction: discord.Interaction, usuario: discord.Member):

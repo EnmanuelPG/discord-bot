@@ -378,10 +378,12 @@ async def create_ticket_channel(guild, ticket_id, embed, username, category_id=N
     return ticket_channel, True
 
 
-async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel):
-    pedidos_channel = guild.get_channel(PEDIDOS_CHANNEL_ID)
+async def send_embed_to_pedidos(bot, guild, bot_user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel):
+    pedidos_channel = bot.get_channel(PEDIDOS_CHANNEL_ID)
     if not pedidos_channel:
-        print(f"Canal de pedidos ({PEDIDOS_CHANNEL_ID}) no encontrado en {guild.name}")
+        pedidos_channel = guild.get_channel(PEDIDOS_CHANNEL_ID)
+    if not pedidos_channel:
+        print(f"[PEDIDOS] Canal {PEDIDOS_CHANNEL_ID} no encontrado en cache")
         return
 
     try:
@@ -933,7 +935,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             if created:
                 increment_daily_count(interaction.user.id)
                 await send_pricing_info(ticket_channel, self.servicio.value)
-                await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
+                await send_embed_to_pedidos(self.bot, guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
             await interaction.followup.send(
                 f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
                 ephemeral=True
@@ -1069,7 +1071,7 @@ class Tickets(commands.Cog):
             detalle = "\n\n".join(lines)
             metodo = answers[-1] if answers else "No especificado"
             print(f"[TICKET] Enviando a pedidos: {ticket_id} ({service_name})", flush=True)
-            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
+            await send_embed_to_pedidos(self.bot, guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
 
     async def _protect_bot_role(self, guild: discord.Guild):
         """Mueve el rol del bot al tope de la jerarquía para evitar que admins lo expulsen."""
