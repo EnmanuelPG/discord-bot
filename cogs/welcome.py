@@ -1,17 +1,18 @@
 import discord
 import asyncio
 import time
+import os
+import pathlib
 from discord.ext import commands
 
 WELCOME_CHANNEL_ID = 1525894271314690129
 TICKET_CHANNEL_ID = 1525894274250707058
+DEDUP_DIR = pathlib.Path("/tmp/welcome_dedup")
 
 
 class Welcome(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._recent_joins = {}
-        self._lock = asyncio.Lock()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -19,23 +20,12 @@ class Welcome(commands.Cog):
             if member.guild.id != 1525894268651176159:
                 return
 
-            async with self._lock:
-                now = time.time()
-                last = self._recent_joins.get(member.id, 0)
-                if now - last < 30:
-                    return
-                self._recent_joins[member.id] = now
+            if not self._claim(member.id):
+                return
 
             channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
             if not channel:
                 return
-
-            try:
-                async for msg in channel.history(limit=10):
-                    if msg.author == self.bot.user and str(member.id) in msg.content:
-                        return
-            except Exception:
-                pass
 
             guild_icon = member.guild.icon.url if member.guild.icon else ""
             ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
@@ -88,7 +78,19 @@ class Welcome(commands.Cog):
             )
             embed.timestamp = discord.utils.utcnow()
 
-            await channel.send(f"¡{member.mention}!", embed=embed)
+            msg = await channel.send(f"¡{member.mention}!", embed=embed)
+
+            await asyncio.sleep(0.5)
+
+            try:
+                async for old in channel.history(limit=10):
+                    if old.id == msg.id:
+                        continue
+                    if old.author == self.bot.user and str(member.id) in old.content:
+                        await old.delete()
+                        break
+            except Exception:
+                pass
 
             try:
                 dm = discord.Embed(
@@ -112,15 +114,27 @@ class Welcome(commands.Cog):
         except Exception as e:
             print(f"[WELCOME] Error: {e}")
 
+    def _claim(self, member_id: int) -> bool:
+        DEDUP_DIR.mkdir(parents=True, exist_ok=True)
+        flag = DEDUP_DIR / str(member_id)
+        try:
+            fd = os.open(str(flag), os.O_CREAT | os.O_EXCL)
+            os.close(fd)
+            return True
+        except FileExistsError:
+            return False
+
     async def _cleanup_loop(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            await asyncio.sleep(120)
-            cutoff = time.time() - 30
-            async with self._lock:
-                stale = [uid for uid, ts in self._recent_joins.items() if ts < cutoff]
-                for uid in stale:
-                    del self._recent_joins[uid]
+            await asyncio.sleep(60)
+            cutoff = time.time() - 60
+            for f in DEDUP_DIR.iterdir():
+                try:
+                    if f.stat().st_mtime < cutoff:
+                        f.unlink(missing_ok=True)
+                except Exception:
+                    pass
 
     async def cog_load(self):
         asyncio.create_task(self._cleanup_loop())
