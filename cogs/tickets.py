@@ -15,6 +15,17 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
+
+SERVICE_CHANNELS = {
+    "Bots Personalizados": 1526350101419786361,
+    "Páginas Web": 1526350103143780493,
+    "Texturas de ER:LC": 1526350104577970187,
+    "Mapas personalizados ER:LC": 1526350106318864444,
+    "Servicios de Discord": 1526350107711246366,
+    "Redacción de documentos ER:LC": 1526350109187641556,
+    "Diseño gráfico": 1526350110600990771,
+    "Alianza": 1526350111788240996,
+}
 CREATOR_ID = 1257780268719411260
 ALLOWED_GUILDS = {1525894268651176159}
 MAX_TICKETS_PER_DAY = 3
@@ -472,6 +483,220 @@ PANEL_EMBED.add_field(
 )
 PANEL_EMBED.set_footer(text="ZentroxDev © 2026 · Calidad y compromiso")
 
+_BOTS_EMBED = discord.Embed(
+    title="🤖 Bots Personalizados",
+    description="Creamos bots a medida para **Discord, Telegram, Minecraft y más**. Automatiza tu comunidad con herramientas profesionales.",
+    color=0x2c3e50,
+)
+_BOTS_EMBED.add_field(
+    name="🧩 Servicios",
+    value=(
+        "• Bots de **moderación** (logs, warns, antispam)\n"
+        "• Bots de **economía** (niveles, tiendas, monedas)\n"
+        "• **Sistemas de tickets** avanzados\n"
+        "• **Paneles web** con dashboard interactivo\n"
+        "• **Música**, **minijuegos** e **IA**\n"
+        "• Integración con **bases de datos** (MySQL, MongoDB)"
+    ),
+    inline=False,
+)
+_BOTS_EMBED.add_field(
+    name="🛠️ Tecnologías",
+    value="**Python** (discord.py, nextcord) · **JavaScript** (discord.js) · **Hosting 24/7** en Railway",
+    inline=False,
+)
+_BOTS_EMBED.add_field(
+    name="💵 Precios desde",
+    value="$10 USD · **Mantenimiento mensual** desde $10/mes",
+    inline=False,
+)
+_BOTS_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_WEB_EMBED = discord.Embed(
+    title="🌐 Páginas Web",
+    description="Desarrollamos páginas web modernas, responsivas y optimizadas. Desde landing pages hasta tiendas online completas.",
+    color=0x2c3e50,
+)
+_WEB_EMBED.add_field(
+    name="🧩 Servicios",
+    value=(
+        "• **Landing pages** profesionales\n"
+        "• **Páginas institucionales** (3–5 secciones)\n"
+        "• **Tiendas online** con pasarela de pago\n"
+        "• **Dashboards** y paneles administrativos\n"
+        "• **Blogs** y portafolios interactivos\n"
+        "• **SEO** y optimización de rendimiento"
+    ),
+    inline=False,
+)
+_WEB_EMBED.add_field(
+    name="🛠️ Stack Tecnológico",
+    value="**Frontend:** HTML, CSS, JS, React, Next.js, Tailwind\n**Backend:** Node.js, Python (Flask), PHP\n**Hosting:** Vercel, Netlify, Railway",
+    inline=False,
+)
+_WEB_EMBED.add_field(
+    name="💵 Precios desde",
+    value="$15 USD · **Hosting + dominio** desde $10/mes",
+    inline=False,
+)
+_WEB_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_TEXTURAS_EMBED = discord.Embed(
+    title="🪄 Texturas ER:LC",
+    description="Diseñamos texturas personalizadas para **Emergency Response: Liberty County**. Dale un estilo único a tu servidor.",
+    color=0x2c3e50,
+)
+_TEXTURAS_EMBED.add_field(
+    name="📦 Packs disponibles",
+    value=(
+        "• **Pack básico** $10 — 2 texturas 32×32\n"
+        "• **Pack estándar** $15 — 5 texturas 64×64\n"
+        "• **Pack premium** $25 — 10 texturas 64×64 + variantes\n"
+        "• **Pack completo** $40 — Texturas para todo tu servidor"
+    ),
+    inline=False,
+)
+_TEXTURAS_EMBED.add_field(
+    name="🎨 Incluye",
+    value="Diseño en **Blockbench**, formato **PNG**, paletas personalizadas, ajustes por feedback",
+    inline=False,
+)
+_TEXTURAS_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_MAPAS_EMBED = discord.Embed(
+    title="🗺️ Mapas personalizados ER:LC",
+    description="Construimos mapas a medida para **Emergency Response: Liberty County** con interiores detallados y diseño profesional.",
+    color=0x2c3e50,
+)
+_MAPAS_EMBED.add_field(
+    name="📦 Tipos de mapa",
+    value=(
+        "• **Mapa pequeño** $20 — Estación, base o comisaría\n"
+        "• **Mapa mediano** $40 — Con interiores detallados\n"
+        "• **Mapa grande** $70 — Extenso + edificios + paisaje\n"
+        "• **Mapa personalizado** $100+ — Diseño 100% desde cero"
+    ),
+    inline=False,
+)
+_MAPAS_EMBED.add_field(
+    name="🏗️ Herramientas",
+    value="**Rmap** (editor ER:LC) · **Blender** · Entrega en formato **.rmap** + screenshots",
+    inline=False,
+)
+_MAPAS_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_SERVICIOS_EMBED = discord.Embed(
+    title="🛠️ Servicios Discord",
+    description="Configuramos y personalizamos tu servidor Discord por completo: desde la estructura hasta la automatización.",
+    color=0x2c3e50,
+)
+_SERVICIOS_EMBED.add_field(
+    name="🧩 Servicios",
+    value=(
+        "• Configuración completa del servidor\n"
+        "• **Sistema de tickets** con paneles interactivos\n"
+        "• **Roles auto-asignables** y niveles\n"
+        "• **Bots de moderación** y economía\n"
+        "• **Logs** y sistemas de auditoría\n"
+        "• Automatizaciones con **welcomes**, **contadores** y más"
+    ),
+    inline=False,
+)
+_SERVICIOS_EMBED.add_field(
+    name="💵 Precios",
+    value="Desde **$10 USD** según la complejidad · **Mantenimiento mensual** disponible",
+    inline=False,
+)
+_SERVICIOS_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_DOCS_EMBED = discord.Embed(
+    title="📝 Redacción de documentos ER:LC",
+    description="Redactamos documentos profesionales para servidores de **Emergency Response: Liberty County**. Reglamentos, manuales y más.",
+    color=0x2c3e50,
+)
+_DOCS_EMBED.add_field(
+    name="📄 Tipos de documento",
+    value=(
+        "• Reglamentos del servidor\n"
+        "• Manuales de personal (policía, EMS, gobierno)\n"
+        "• Guías de reglas y normativas\n"
+        "• Contratos y acuerdos internos\n"
+        "• Documentos de facciones y departamentos"
+    ),
+    inline=False,
+)
+_DOCS_EMBED.add_field(
+    name="✍️ Formato",
+    value="Documentos profesionales con **formato claro**, índices y diseño limpio. Entregados en **PDF** o **TXT**.",
+    inline=False,
+)
+_DOCS_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_DISENO_EMBED = discord.Embed(
+    title="🎨 Diseño Gráfico",
+    description="Creamos diseños visuales para tu marca o servidor: logos, banners, emojis y más.",
+    color=0x2c3e50,
+)
+_DISENO_EMBED.add_field(
+    name="🖌️ Servicios",
+    value=(
+        "• **Logos** profesionales para tu marca o servidor\n"
+        "• **Banners** para Discord, YouTube y redes sociales\n"
+        "• **Emojis personalizados** animados y estáticos\n"
+        "• **Portadas** para documentos y presentaciones\n"
+        "• **Paletas de color** y branding completo"
+    ),
+    inline=False,
+)
+_DISENO_EMBED.add_field(
+    name="💵 Precios desde",
+    value="$5 USD por emoji · $10 USD por logo · $15 USD por banner completo",
+    inline=False,
+)
+_DISENO_EMBED.set_footer(text="Usa /pedido o el panel de tickets para solicitar el tuyo")
+
+_ALIANZA_EMBED = discord.Embed(
+    title="🤝 Alianza",
+    description="¿Quieres formar parte de nuestras alianzas? Colaboramos con servidores y comunidades para crecer juntos.",
+    color=0x2c3e50,
+)
+_ALIANZA_EMBED.add_field(
+    name="✅ Requisitos",
+    value=(
+        "• Servidor con **50+ miembros** activos\n"
+        "• Comunidad **activa** y bien moderada\n"
+        "• Disposición a **colaborar** mutuamente\n"
+        "• No tener contenido **tóxico** o **discriminatorio**"
+    ),
+    inline=False,
+)
+_ALIANZA_EMBED.add_field(
+    name="🎁 Beneficios",
+    value=(
+        "• **Publicación** en nuestro servidor\n"
+        "• **Descuentos especiales** en servicios\n"
+        "• **Soporte prioritario**\n"
+        "• **Colaboraciones** en eventos y sorteos"
+    ),
+    inline=False,
+)
+_ALIANZA_EMBED.add_field(
+    name="📩 ¿Cómo aplicar?",
+    value="Abre un ticket con **/pedido** o desde el panel seleccionando **Alianza** y cuéntanos sobre tu comunidad.",
+    inline=False,
+)
+_ALIANZA_EMBED.set_footer(text="ZentroxDev · Creciendo juntos")
+
+SERVICE_EMBEDS = {
+    "Bots Personalizados": _BOTS_EMBED,
+    "Páginas Web": _WEB_EMBED,
+    "Texturas de ER:LC": _TEXTURAS_EMBED,
+    "Mapas personalizados ER:LC": _MAPAS_EMBED,
+    "Servicios de Discord": _SERVICIOS_EMBED,
+    "Redacción de documentos ER:LC": _DOCS_EMBED,
+    "Diseño gráfico": _DISENO_EMBED,
+    "Alianza": _ALIANZA_EMBED,
+}
 
 class TicketPanelView(discord.ui.View):
     def __init__(self, cog=None):
@@ -720,11 +945,11 @@ class Tickets(commands.Cog):
     def _validar_respuesta(self, content):
         import re
         content = content.strip()
-        if not content or len(content) < 3:
-            return False, "La respuesta debe tener al menos 3 caracteres."
+        if not content:
+            return False, "La respuesta no puede estar vacia."
         if len(content) > 1000:
             return False, "La respuesta es muy larga. Maximo 1000 caracteres."
-        if re.match(r'^(.)\1{4,}$', content) or len(set(content.lower())) <= 2:
+        if re.match(r'^(.)\1{6,}$', content) or len(set(content.lower())) <= 1:
             return False, "Por favor, escribe una respuesta valida."
         return True, ""
 
@@ -872,6 +1097,27 @@ class Tickets(commands.Cog):
                     await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
             except Exception:
                 pass
+
+    @app_commands.command(name="setup-embeds", description="Envía embeds de servicios a todos los canales de servicio")
+    @app_commands.default_permissions(administrator=True)
+    async def setup_embeds(self, interaction: discord.Interaction):
+        if not interaction.guild:
+            await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        enviados = 0
+        for nombre, cid in SERVICE_CHANNELS.items():
+            channel = interaction.guild.get_channel(cid)
+            if not channel:
+                continue
+            e = SERVICE_EMBEDS.get(nombre)
+            if e:
+                try:
+                    await channel.send(embed=e)
+                    enviados += 1
+                except Exception:
+                    pass
+        await interaction.followup.send(f"✅ Embeds enviados a **{enviados}/{len(SERVICE_EMBEDS)}** canales.", ephemeral=True)
 
     @app_commands.command(name="setup-welcome", description="Envía el embed de bienvenida al canal de bienvenida")
     @app_commands.default_permissions(administrator=True)
