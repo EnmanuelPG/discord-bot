@@ -23,64 +23,64 @@ _user_daily_tickets = {}
 SERVICE_PRICES = {
     "Bots Personalizados": {
         "paquetes": [
-            "**Básico** `$3` — Bot con hasta 5 comandos personalizados",
-            "**Estándar** `$8` — Bot con 10+ comandos, economía o moderación",
-            "**Profesional** `$15` — Bot completo con BD, logs, niveles, temporizadores",
-            "**Premium** `$25+` — Bot con panel web, dashboard, APIs externas",
+            "**Básico** `$7` — Bot con hasta 5 comandos personalizados",
+            "**Estándar** `$15` — Bot con 10+ comandos, economía o moderación",
+            "**Profesional** `$30` — Bot completo con BD, logs, niveles, temporizadores",
+            "**Premium** `$50+` — Bot con panel web, dashboard, APIs externas",
         ],
-        "monthy": "Estándar `$5/mes` · Profesional `$10/mes` · Premium `$15/mes`"
+        "monthy": "Estándar `$7/mes` · Profesional `$12/mes` · Premium `$20/mes`"
     },
     "Páginas Web": {
         "paquetes": [
-            "**Landing Page** `$5` — 1 página, diseño moderno responsive",
-            "**Institucional** `$12` — 3-5 páginas, formulario, SEO",
-            "**Profesional** `$25` — Panel admin, base de datos, auth",
-            "**Tienda / App** `$50+` — E-commerce, pasarela de pago, APIs",
+            "**Landing Page** `$10` — 1 página, diseño moderno responsive",
+            "**Institucional** `$20` — 3-5 páginas, formulario, SEO",
+            "**Profesional** `$40` — Panel admin, base de datos, auth",
+            "**Tienda / App** `$70+` — E-commerce, pasarela de pago, APIs",
         ],
-        "monthy": "Desde `$5/mes` (hosting + dominio + mantenimiento)"
+        "monthy": "Desde `$7/mes` (hosting + dominio + mantenimiento)"
     },
     "Texturas de ER:LC": {
         "paquetes": [
-            "**Pack básico** `$2` — 1 textura personalizada (16×16)",
-            "**Pack estándar** `$5` — 5 texturas (32×32)",
-            "**Pack premium** `$10` — 10 texturas (64×64) + variantes",
-            "**Pack completo** `$18` — Texturas para todo tu servidor ER:LC",
+            "**Pack básico** `$7` — 2 texturas personalizadas (32×32)",
+            "**Pack estándar** `$12` — 5 texturas (64×64)",
+            "**Pack premium** `$20` — 10 texturas (64×64) + variantes",
+            "**Pack completo** `$35` — Texturas para todo tu servidor ER:LC",
         ],
         "monthy": None
     },
     "Mapas personalizados ER:LC": {
         "paquetes": [
-            "**Mapa pequeño** `$8` — Estación, comisaría o base pequeña",
-            "**Mapa mediano** `$20` — Mapa con interiores detallados",
-            "**Mapa grande** `$40` — Mapa extenso + edificios + paisaje",
-            "**Mapa personalizado** `$65+` — Diseño 100% desde 0 a tu medida",
+            "**Mapa pequeño** `$15` — Estación, comisaría o base pequeña",
+            "**Mapa mediano** `$35` — Mapa con interiores detallados",
+            "**Mapa grande** `$60` — Mapa extenso + edificios + paisaje",
+            "**Mapa personalizado** `$90+` — Diseño 100% desde 0 a tu medida",
         ],
         "monthy": None
     },
     "Servicios de Discord": {
         "paquetes": [
-            "**Configuración** `$3` — Roles, canales, bots, bienvenidas",
-            "**Moderación** `$8` — Sistema de warns, logs, tickets, anti-raid",
-            "**Comunidad** `$15` — Todo + economía, niveles, sorteos",
-            "**Servidor completo** `$25+` — Servidor optimizado con bots a medida",
+            "**Configuración** `$7` — Roles, canales, bots, bienvenidas",
+            "**Moderación** `$15` — Sistema de warns, logs, tickets, anti-raid",
+            "**Comunidad** `$25` — Todo + economía, niveles, sorteos",
+            "**Servidor completo** `$40+` — Servidor optimizado con bots a medida",
         ],
-        "monthy": "`$5/mes` — Actualizaciones + soporte + nuevas features"
+        "monthy": "`$7/mes` — Actualizaciones + soporte + nuevas features"
     },
     "Redacción de documentos ER:LC": {
         "paquetes": [
-            "**Documento simple** `$2` — Plantilla de reglas o rangos",
-            "**Documento completo** `$7` — Reglamento + sanciones + rangos + lore",
-            "**Pack de documentos** `$12` — Sistema legal completo del servidor",
-            "**Personalizado** `$18+` — Redacción profesional con glosario y guías",
+            "**Documento simple** `$7` — Plantilla de reglas o rangos",
+            "**Documento completo** `$12` — Reglamento + sanciones + rangos + lore",
+            "**Pack de documentos** `$20` — Sistema legal completo del servidor",
+            "**Personalizado** `$30+` — Redacción profesional con glosario y guías",
         ],
         "monthy": None
     },
     "Diseño gráfico": {
         "paquetes": [
-            "**Logo / Icono** `$2` — Diseño simple con tu idea",
-            "**Banner / Portada** `$5` — Banner para servidor o redes",
-            "**Pack gráfico** `$12` — Logo + banner + emojis + fondos",
-            "**Branding completo** `$25+` — Identidad visual completa, mockups",
+            "**Logo / Icono** `$7` — Diseño simple con tu idea",
+            "**Banner / Portada** `$10` — Banner para servidor o redes",
+            "**Pack gráfico** `$20` — Logo + banner + emojis + fondos",
+            "**Branding completo** `$35+` — Identidad visual completa, mockups",
         ],
         "monthy": None
     },
