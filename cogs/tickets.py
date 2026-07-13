@@ -1200,6 +1200,17 @@ class Tickets(commands.Cog):
             except Exception:
                 pass
 
+    @app_commands.command(name="setup-pedidos", description="Renombra el canal de pedidos y le pone topic")
+    async def setup_pedidos(self, interaction: discord.Interaction):
+        channel = interaction.guild.get_channel(PEDIDOS_CHANNEL_ID) if interaction.guild else None
+        if not channel:
+            return await interaction.response.send_message("❌ Canal de pedidos no encontrado.", ephemeral=True)
+        await channel.edit(
+            name="📦┃pedidos",
+            topic="Nuevos pedidos del servidor — ZentroxDev"
+        )
+        await interaction.response.send_message("✅ Canal renombrado a `📦┃pedidos`.", ephemeral=True)
+
     @app_commands.command(name="close", description="Cierra el ticket actual (solo staff o creador)")
     async def close(self, interaction: discord.Interaction):
         try:
