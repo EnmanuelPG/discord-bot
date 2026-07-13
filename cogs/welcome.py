@@ -1,55 +1,19 @@
 import discord
 import asyncio
-import json
-import os
-import random
 import time
-import uuid
 from discord.ext import commands
 
 WELCOME_CHANNEL_ID = 1525894271314690129
 TICKET_CHANNEL_ID = 1525894274250707058
 MEMBER_ROLE_ID = 1525894268651176162
-INSTANCE_ID = uuid.uuid4().hex[:8]
-DEDUP_FILE = "/tmp/welcome_dedup.json"
-
-
-def log(msg):
-    print(f"[WELCOME] {msg}", flush=True)
-
-
-def load_dedup():
-    try:
-        with open(DEDUP_FILE) as f:
-            data = json.load(f)
-        cutoff = time.time() - 60
-        return {k: v for k, v in data.items() if v > cutoff}
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-
-def save_dedup(data):
-    os.makedirs(os.path.dirname(DEDUP_FILE) or ".", exist_ok=True)
-    with open(DEDUP_FILE, "w") as f:
-        json.dump(data, f)
-
-
-def claim_member(member_id: int) -> bool:
-    data = load_dedup()
-    if str(member_id) in data:
-        return False
-    data[str(member_id)] = time.time()
-    save_dedup(data)
-    return True
 
 
 class Welcome(commands.Cog):
-    _processing = set()
+    _recent = {}
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._lock = asyncio.Lock()
-        log(f"Cog loaded (instance={INSTANCE_ID})")
+        print("[WELCOME] Cog loaded", flush=True)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -57,16 +21,14 @@ class Welcome(commands.Cog):
             if member.guild.id != 1525894268651176159:
                 return
 
-            log(f"on_member_join: member={member.id} name={member.display_name} instance={INSTANCE_ID}")
-
-            if not claim_member(member.id):
-                log(f"Duplicate blocked (JSON file) for {member.id}")
+            now = time.time()
+            last = self._recent.get(member.id, 0)
+            if now - last < 120:
+                print(f"[WELCOME] Dedup blocked {member.id}", flush=True)
                 return
+            self._recent[member.id] = now
 
-            if member.id in self._processing:
-                log(f"Duplicate blocked (_processing set) for {member.id}")
-                return
-            self._processing.add(member.id)
+            print(f"[WELCOME] Processing {member.id} {member.display_name}", flush=True)
 
             channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
             ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
@@ -75,12 +37,10 @@ class Welcome(commands.Cog):
             if role:
                 try:
                     await member.add_roles(role, reason="Autorol de bienvenida")
-                    log(f"Assigned role {role.name} to {member.id}")
                 except Exception as e:
-                    log(f"Failed to assign role: {e}")
+                    print(f"[WELCOME] Role error: {e}", flush=True)
 
             if not channel:
-                log("Welcome channel not found")
                 return
 
             guild_icon = member.guild.icon.url if member.guild.icon else ""
@@ -134,20 +94,17 @@ class Welcome(commands.Cog):
             embed.timestamp = discord.utils.utcnow()
 
             msg = await channel.send(f"¡{member.mention}!", embed=embed)
-            log(f"Sent channel message {msg.id} for {member.id} (instance={INSTANCE_ID})")
+            print(f"[WELCOME] Channel sent {msg.id}", flush=True)
 
             await asyncio.sleep(2)
 
-            try:
-                async for old in channel.history(limit=10):
-                    if old.id == msg.id:
-                        continue
-                    if old.author == self.bot.user and str(member.id) in old.content:
-                        log(f"Deleting duplicate {old.id} (keeping {msg.id}) for {member.id}")
-                        await old.delete()
-                        break
-            except Exception as e:
-                log(f"Post-send cleanup error: {e}")
+            async for old in channel.history(limit=15):
+                if old.id == msg.id:
+                    continue
+                if old.author == self.bot.user and str(member.id) in old.content:
+                    await old.delete()
+                    print(f"[WELCOME] Deleted dup {old.id}", flush=True)
+                    break
 
             try:
                 dm = discord.Embed(
@@ -166,15 +123,13 @@ class Welcome(commands.Cog):
                 dm.set_thumbnail(url=guild_icon)
                 dm.set_footer(text="ZentroxDev © 2026 · Desarrollo profesional desde cero")
                 await member.send(embed=dm)
-                log(f"Sent DM to {member.id}")
+                print(f"[WELCOME] DM sent", flush=True)
             except discord.Forbidden:
-                log(f"DM blocked for {member.id}")
+                print(f"[WELCOME] DM blocked", flush=True)
 
-            log(f"Done processing {member.id} (instance={INSTANCE_ID})")
+            print(f"[WELCOME] Done {member.id}", flush=True)
         except Exception as e:
-            log(f"UNHANDLED ERROR for {member.id}: {e}")
-        finally:
-            self._processing.discard(member.id)
+            print(f"[WELCOME] ERROR: {e}", flush=True)
 
 
 async def setup(bot: commands.Bot):
