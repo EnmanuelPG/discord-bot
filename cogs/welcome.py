@@ -1,16 +1,12 @@
 import discord
 import asyncio
 import random
-import time
-import os
-import pathlib
 import uuid
 from discord.ext import commands
 
 WELCOME_CHANNEL_ID = 1525894271314690129
 TICKET_CHANNEL_ID = 1525894274250707058
 MEMBER_ROLE_ID = 1525894268651176162
-DEDUP_DIR = pathlib.Path("/tmp/welcome_dedup")
 
 INSTANCE_ID = uuid.uuid4().hex[:8]
 
@@ -18,6 +14,7 @@ INSTANCE_ID = uuid.uuid4().hex[:8]
 class Welcome(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._lock = asyncio.Lock()
         print(f"[WELCOME] Cog loaded (instance={INSTANCE_ID})")
 
     @commands.Cog.listener()
@@ -40,11 +37,11 @@ class Welcome(commands.Cog):
                     print(f"[WELCOME] Failed to assign role: {e}")
 
             if not channel:
-                print("[WELCOME] Channel not found")
+                print("[WELCOME] Welcome channel not found")
                 return
 
-            async with asyncio.Lock():
-                await asyncio.sleep(random.uniform(0.3, 1.0))
+            async with self._lock:
+                await asyncio.sleep(random.uniform(0.5, 1.2))
                 try:
                     async for msg in channel.history(limit=5):
                         if msg.author == self.bot.user and str(member.id) in msg.content:
@@ -104,9 +101,9 @@ class Welcome(commands.Cog):
             embed.timestamp = discord.utils.utcnow()
 
             msg = await channel.send(f"¡{member.mention}!", embed=embed)
-            print(f"[WELCOME] Sent channel message {msg.id} for {member.id}")
+            print(f"[WELCOME] Sent channel message {msg.id} for {member.id} (instance={INSTANCE_ID})")
 
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(2)
 
             try:
                 async for old in channel.history(limit=10):
@@ -139,7 +136,6 @@ class Welcome(commands.Cog):
                 print(f"[WELCOME] Sent DM to {member.id}")
             except discord.Forbidden:
                 print(f"[WELCOME] DM blocked for {member.id}")
-                pass
 
             print(f"[WELCOME] Done processing {member.id} (instance={INSTANCE_ID})")
         except Exception as e:
