@@ -136,6 +136,27 @@ class Moderation(commands.Cog):
         APPEALS_CHANNEL_ID = apel.id
         _save_config()
 
+        appeal_embed = discord.Embed(
+            title="📌 Apelaciones",
+            description=(
+                "Si has recibido una sanción (mute, regaño, etc.) y consideras\n"
+                "que fue injusta o deseas explicar tu situación, puedes apelar aquí.\n\n"
+                "**¿Cómo apelar?**\n"
+                "Escribe tu caso de forma clara y respetuosa. Incluye:\n"
+                "• Tu **usuario** exacto\n"
+                "• La **sanción** que recibiste\n"
+                "• El **motivo** por el que crees que debe revisarse\n\n"
+                "Un miembro del staff evaluará tu apelación y te responderá.\n"
+                "**No** abuses de este canal ni envíes spam."
+            ),
+            color=0x8b5cf6,
+        )
+        appeal_embed.set_footer(text="ZentroxDev · El staff revisará tu caso")
+        try:
+            await apel.send(embed=appeal_embed)
+        except Exception:
+            pass
+
         await interaction.followup.send(
             f"✅ Moderacion configurada:\n"
             f"{category.mention}\n"
