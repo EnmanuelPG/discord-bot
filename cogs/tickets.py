@@ -15,7 +15,7 @@ PANEL_CATEGORY_ID = 1525894274250707057
 WEB_CATEGORY_ID = 1525894274837643331
 TICKET_PANEL_CHANNEL_ID = 1525894274250707058
 WEBHOOK_URL = "https://discord.com/api/webhooks/1525901334099005522/fMEAzTIH8C7cj6slpA3PDajFjkn2x3uOLgoQgHN0E_fwDgNzebJg6VbK5wFCwapzbAFo"
-CREATOR_ID = 1522702606437322882
+CREATOR_ID = 1257780268719411260
 ALLOWED_GUILDS = {1525894268651176159}
 MAX_TICKETS_PER_DAY = 3
 _user_daily_tickets = {}
@@ -95,6 +95,8 @@ MAINTENANCE_PLANS = {
 
 
 def check_daily_limit(user_id: int) -> tuple[bool, int]:
+    if user_id == CREATOR_ID:
+        return True, 0
     today = date.today()
     entry = _user_daily_tickets.get(user_id)
     if entry and entry[0] == today:
@@ -103,6 +105,8 @@ def check_daily_limit(user_id: int) -> tuple[bool, int]:
 
 
 def increment_daily_count(user_id: int):
+    if user_id == CREATOR_ID:
+        return
     today = date.today()
     entry = _user_daily_tickets.get(user_id)
     if entry and entry[0] == today:
