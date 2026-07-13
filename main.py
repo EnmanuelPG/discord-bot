@@ -184,11 +184,23 @@ async def init_http_server():
     return runner
 
 async def run_bot():
+    if not config.DISCORD_TOKEN:
+        print("=" * 60)
+        print("ERROR: DISCORD_TOKEN no está configurado.")
+        print("Ve a Railway → Dashboard → Variables de entorno")
+        print("y agrega DISCORD_TOKEN con el token de tu bot.")
+        print("=" * 60)
+        return
+    if not config.GEMINI_API_KEY:
+        print("⚠ GEMINI_API_KEY no está configurada.")
+        print("  El cog 'ai_chat' no estará disponible hasta que")
+        print("  agregues GEMINI_API_KEY en Railway.")
+        print("=" * 60)
     for cog in ("cogs.music", "cogs.ai_chat", "cogs.tickets"):
         try:
             await bot.load_extension(cog)
         except Exception as e:
-            print(f"Error loading {e}: {e}")
+            print(f"Error al cargar extensión {cog}: {e}")
     try:
         await bot.start(config.DISCORD_TOKEN)
     except Exception as e:
