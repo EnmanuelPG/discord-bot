@@ -581,6 +581,17 @@ class TicketPanelView(discord.ui.View):
             except Exception:
                 pass
 
+    def _validar_respuesta(self, content):
+        import re
+        content = content.strip()
+        if not content or len(content) < 3:
+            return False, "La respuesta debe tener al menos 3 caracteres."
+        if len(content) > 1000:
+            return False, "La respuesta es muy larga. Maximo 1000 caracteres."
+        if re.match(r'^(.)\1{4,}$', content) or len(set(content.lower())) <= 2:
+            return False, "Por favor, escribe una respuesta valida."
+        return True, ""
+
     async def _run_questionnaire(self, channel, member, service_name):
         questions = SERVICE_QUESTIONS.get(service_name, [])
         if not questions:
@@ -603,20 +614,32 @@ class TicketPanelView(discord.ui.View):
             def check(m):
                 return m.channel == channel and m.author == member and not m.author.bot
 
-            try:
-                msg = await self.bot.wait_for('message', timeout=600.0, check=check)
-                answers.append(msg.content)
+            while True:
                 try:
-                    await msg.add_reaction('✅')
-                except Exception:
-                    pass
-            except asyncio.TimeoutError:
-                await channel.send(
-                    "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
-                    "tus respuestas en el canal y un miembro del equipo las revisará."
-                )
-                return []
+                    msg = await self.bot.wait_for('message', timeout=600.0, check=check)
+                except asyncio.TimeoutError:
+                    await channel.send(
+                        "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
+                        "tus respuestas en el canal y un miembro del equipo las revisará."
+                    )
+                    return []
 
+                content = msg.content.strip()
+                valid, reason = self._validar_respuesta(content)
+                if valid:
+                    answers.append(content)
+                    try:
+                        await msg.add_reaction('✅')
+                    except Exception:
+                        pass
+                    break
+                else:
+                    try:
+                        await msg.add_reaction('❌')
+                        await channel.send(f"{reason} Responde nuevamente.")
+                    except Exception:
+                        pass
+ 
         done = discord.Embed(
             title="Cuestionario completado",
             description=(
