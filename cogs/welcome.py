@@ -5,7 +5,6 @@ from discord.ext import commands
 
 WELCOME_CHANNEL_ID = 1525894271314690129
 TICKET_CHANNEL_ID = 1525894274250707058
-DEDUP_SECONDS = 30
 
 
 class Welcome(commands.Cog):
@@ -23,17 +22,22 @@ class Welcome(commands.Cog):
             async with self._lock:
                 now = time.time()
                 last = self._recent_joins.get(member.id, 0)
-                if now - last < DEDUP_SECONDS:
+                if now - last < 30:
                     return
                 self._recent_joins[member.id] = now
 
             channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
             if not channel:
-                print(f"[WELCOME] Channel {WELCOME_CHANNEL_ID} not found")
                 return
 
-            guild_icon = member.guild.icon.url if member.guild.icon else None
-            guild_banner = member.guild.banner.url if member.guild.banner else None
+            try:
+                async for msg in channel.history(limit=10):
+                    if msg.author == self.bot.user and str(member.id) in msg.content:
+                        return
+            except Exception:
+                pass
+
+            guild_icon = member.guild.icon.url if member.guild.icon else ""
             ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
 
             embed = discord.Embed(
@@ -50,8 +54,8 @@ class Welcome(commands.Cog):
             )
 
             embed.set_thumbnail(url=guild_icon)
-            if guild_banner:
-                embed.set_image(url=guild_banner)
+            if member.guild.banner:
+                embed.set_image(url=member.guild.banner.url)
             else:
                 embed.set_image(url="https://placehold.co/1200x400/0d1117/3b82f6?text=Bienvenido+a+ZentroxDev&font=montserrat")
 
@@ -85,7 +89,6 @@ class Welcome(commands.Cog):
             embed.timestamp = discord.utils.utcnow()
 
             await channel.send(f"¡{member.mention}!", embed=embed)
-            print(f"[WELCOME] Sent channel welcome to {member.id} ({member.display_name})")
 
             try:
                 dm = discord.Embed(
@@ -104,18 +107,16 @@ class Welcome(commands.Cog):
                 dm.set_thumbnail(url=guild_icon)
                 dm.set_footer(text="ZentroxDev © 2026 · Desarrollo profesional desde cero")
                 await member.send(embed=dm)
-                print(f"[WELCOME] Sent DM welcome to {member.id}")
             except discord.Forbidden:
-                print(f"[WELCOME] DM blocked for {member.id}")
                 pass
         except Exception as e:
-            print(f"[WELCOME] Error processing {member.id}: {e}")
+            print(f"[WELCOME] Error: {e}")
 
     async def _cleanup_loop(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             await asyncio.sleep(120)
-            cutoff = time.time() - DEDUP_SECONDS
+            cutoff = time.time() - 30
             async with self._lock:
                 stale = [uid for uid, ts in self._recent_joins.items() if ts < cutoff]
                 for uid in stale:
