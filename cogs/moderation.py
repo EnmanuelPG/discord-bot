@@ -98,26 +98,27 @@ class Moderation(commands.Cog):
         existing = discord.utils.get(guild.categories, name=MOD_CATEGORY_NAME)
         category = existing or await guild.create_category(MOD_CATEGORY_NAME, reason="Creacion categoria moderacion")
 
-        staff_perms = discord.PermissionOverwrite(
-            view_channel=True, send_messages=True, read_message_history=True
-        )
-        everyone_perms_view = discord.PermissionOverwrite(
+        everyone_view = discord.PermissionOverwrite(
             view_channel=True, send_messages=False, read_message_history=True
         )
-        everyone_perms_full = discord.PermissionOverwrite(
+        everyone_full = discord.PermissionOverwrite(
             view_channel=True, send_messages=True, read_message_history=True
         )
-
         bot_perms = discord.PermissionOverwrite(
             view_channel=True, send_messages=True, manage_channels=True, read_message_history=True
         )
+
+        sanc_overwrites = {guild.default_role: everyone_view, guild.me: bot_perms}
+        for role in guild.roles:
+            if role.permissions.moderate_members or role.permissions.administrator:
+                sanc_overwrites[role] = discord.PermissionOverwrite(send_messages=True)
 
         sanc_name = f"🔒┃{SANCTIONS_CHANNEL_NAME}"
         sanc = discord.utils.get(guild.channels, name=sanc_name)
         if not sanc:
             sanc = await guild.create_text_channel(
                 sanc_name, category=category,
-                overwrites={guild.default_role: everyone_perms_view, guild.me: bot_perms},
+                overwrites=sanc_overwrites,
                 reason="Canal de sanciones"
             )
 
@@ -126,7 +127,7 @@ class Moderation(commands.Cog):
         if not apel:
             apel = await guild.create_text_channel(
                 apel_name, category=category,
-                overwrites={guild.default_role: everyone_perms_full, guild.me: bot_perms},
+                overwrites={guild.default_role: everyone_full, guild.me: bot_perms},
                 reason="Canal de apelaciones"
             )
 
