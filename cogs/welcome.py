@@ -119,7 +119,7 @@ class Welcome(commands.Cog):
                     del self._recent_joins[uid]
 
     async def cog_load(self):
-        self.bot.loop.create_task(self._cleanup_loop())
+        asyncio.create_task(self._cleanup_loop())
 
 
 async def setup(bot: commands.Bot):
