@@ -584,7 +584,7 @@ class TicketPanelView(discord.ui.View):
     async def _run_questionnaire(self, channel, member, service_name):
         questions = SERVICE_QUESTIONS.get(service_name, [])
         if not questions:
-            return
+            return []
 
         answers = []
         intro = (
@@ -615,7 +615,7 @@ class TicketPanelView(discord.ui.View):
                     "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
                     "tus respuestas en el canal y un miembro del equipo las revisará."
                 )
-                return
+                return []
 
         summary_lines = []
         for i, (q, a) in enumerate(zip(questions, answers)):
@@ -635,6 +635,7 @@ class TicketPanelView(discord.ui.View):
             "Si necesitas agregar algo más, puedes escribir libremente en este canal."
         )
         await channel.send(summary)
+        return answers
 
     async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
         guild = interaction.guild
@@ -660,7 +661,18 @@ class TicketPanelView(discord.ui.View):
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
             ephemeral=True
         )
-        await self._run_questionnaire(ticket_channel, interaction.user, service_name)
+        answers = await self._run_questionnaire(ticket_channel, interaction.user, service_name)
+        if answers:
+            questions = SERVICE_QUESTIONS.get(service_name, [])
+            lines = []
+            for i, (q, a) in enumerate(zip(questions, answers)):
+                clean = q.replace('**', '')
+                if ' ' in clean:
+                    clean = clean.split(' ', 1)[1] if len(clean.split(' ', 1)) > 1 else clean
+                lines.append(f"**Pregunta {i+1}:** {clean}\n**R:** {a}")
+            detalle = "\n\n".join(lines)
+            metodo = answers[-1] if answers else "No especificado"
+            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
 
 SERVICE_QUESTIONS = {
     "Bots Personalizados": [
