@@ -148,6 +148,17 @@ async def handle_create_order(request):
         }))
     from cogs.tickets import send_embed_to_pedidos
     await send_embed_to_pedidos(guild, bot.user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel)
+
+    detalle_msg = (
+        f"📋 **Detalles de tu pedido — {service_name}**\n"
+        f"═══════════════════════════════\n"
+        f"{detalle}\n\n"
+        f"**Método de pago:** {metodo}\n"
+        f"**Usuario Discord:** {usuario}\n"
+        f"═══════════════════════════════\n"
+        f"📌 *Un administrador revisará tu solicitud y te atenderá pronto.*"
+    )
+    await ticket_channel.send(detalle_msg)
     increment_daily_count(member.id)
     return cors_response(web.json_response({
         "ok": True, "channel_id": str(ticket_channel.id),
