@@ -581,6 +581,61 @@ class TicketPanelView(discord.ui.View):
             except Exception:
                 pass
 
+    async def _run_questionnaire(self, channel, member, service_name):
+        questions = SERVICE_QUESTIONS.get(service_name, [])
+        if not questions:
+            return
+
+        answers = []
+        intro = (
+            f"📋 **Cuestionario interactivo — {service_name}**\n\n"
+            f"Te haré **{len(questions)} preguntas** para entender mejor tu proyecto. "
+            f"Responde una por una en este canal.\n"
+            f"⏰ Tienes **10 minutos** por respuesta.\n\n"
+            f"*Comenzamos en unos segundos...*"
+        )
+        await channel.send(intro)
+        await asyncio.sleep(2)
+
+        for i, question in enumerate(questions):
+            await channel.send(f"**❓ Pregunta {i+1}/{len(questions)}**\n{question}")
+
+            def check(m):
+                return m.channel == channel and m.author == member and not m.author.bot
+
+            try:
+                msg = await self.bot.wait_for('message', timeout=600.0, check=check)
+                answers.append(msg.content)
+                try:
+                    await msg.add_reaction('✅')
+                except Exception:
+                    pass
+            except asyncio.TimeoutError:
+                await channel.send(
+                    "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
+                    "tus respuestas en el canal y un miembro del equipo las revisará."
+                )
+                return
+
+        summary_lines = []
+        for i, (q, a) in enumerate(zip(questions, answers)):
+            clean_q = q.replace('**', '')
+            if ' ' in clean_q:
+                clean_q = clean_q.split(' ', 1)[1] if len(clean_q.split(' ', 1)) > 1 else clean_q
+            summary_lines.append(f"**{i+1}.** {clean_q}\n➡ {a}")
+
+        summary = (
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📋 **Resumen de tu pedido — {service_name}**\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            + "\n\n".join(summary_lines) +
+            "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✅ **¡Cuestionario completado!**\n"
+            "Un miembro del equipo revisará tus respuestas y te atenderá pronto.\n"
+            "Si necesitas agregar algo más, puedes escribir libremente en este canal."
+        )
+        await channel.send(summary)
+
     async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
         guild = interaction.guild
         if not guild:
@@ -599,78 +654,98 @@ class TicketPanelView(discord.ui.View):
         if not created:
             await interaction.followup.send(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
             return
-        questions = SERVICE_QUESTIONS.get(service_name, [
-            "📌 **Cuéntanos los detalles de tu solicitud**",
-            "⏰ **¿Tienes algún plazo límite?**",
-            "💳 **¿Cuál es tu método de pago preferido?**",
-        ])
-        msg = f"📝 **Cuéntanos más sobre tu solicitud de {service_name}**\n\n" + \
-              "\n".join(f"{q}" for q in questions) + \
-              "\n\nUn miembro del equipo te atenderá en breve. 💙"
-        await ticket_channel.send(msg)
         await send_pricing_info(ticket_channel, service_name)
         increment_daily_count(interaction.user.id)
         await interaction.followup.send(
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
             ephemeral=True
         )
+        await self._run_questionnaire(ticket_channel, interaction.user, service_name)
 
 SERVICE_QUESTIONS = {
     "Bots Personalizados": [
-        "🤖 **¿Qué tipo de bot necesitas?** (Moderación, Música, Tickets, Juegos, Multipropósito...)",
-        "⚙️ **¿Qué funcionalidades específicas debe tener?**",
-        "💻 **¿Para qué plataforma?** (Discord, Telegram, Minecraft...)",
-        "📁 **¿Tienes algún ejemplo o referencia?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🤖 **¿Qué tipo de bot necesitas?** (Moderación, economía, tickets, música, juegos, IA, multipropósito...)",
+        "⚙️ **Describe en detalle TODAS las funcionalidades y comandos que debe tener**",
+        "💻 **¿Para qué plataforma es?** (Discord, Telegram, Minecraft, WhatsApp...)",
+        "📊 **¿Necesitas panel web o dashboard para administrar el bot?**",
+        "🐍 **¿Qué lenguaje prefieres?** (Python, JavaScript, o lo dejamos a nuestra elección)",
+        "👥 **¿Cuántos usuarios estimas que usarán el bot aproximadamente?**",
+        "🗄️ **¿Necesitas integración con base de datos?** (MySQL, MongoDB, PostgreSQL...)",
+        "📁 **¿Tienes ejemplos de bots similares o ideas de referencia?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Páginas Web": [
-        "🌐 **¿Qué tipo de página web?** (Landing page, Tienda, Blog, Portafolio, Sistema...)",
-        "🎨 **¿Tienes diseño o referencia visual?** (Figma, PDF, ejemplo de otra web...)",
-        "📱 **¿Necesitas que sea responsive?**",
-        "🛠️ **¿Qué funcionalidades debe tener?** (Formularios, login, pasarela de pago...)",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🌐 **¿Qué tipo de página web necesitas?** (Landing page, tienda online, blog, portafolio, panel...)",
+        "📐 **Describe las secciones que debe incluir** (Inicio, servicios, contacto, login, dashboard...)",
+        "🎨 **¿Tienes diseño o referencia visual?** (Figma, PDF, URL de ejemplo...)",
+        "📱 **¿Necesitas que sea responsive y adaptada a móviles?**",
+        "🛠️ **¿Qué funcionalidades debe tener?** (Formularios, login, pasarela de pago, panel admin...)",
+        "🗄️ **¿Necesitas base de datos y backend para gestionar contenido?**",
+        "🔗 **¿Tienes dominio propio o necesitas ayuda para conseguirlo?**",
+        "📝 **¿Tienes los textos e imágenes listos o prefieres que los creemos?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Texturas de ER:LC": [
-        "🎨 **¿Qué tipo de textura buscas?** (Vehículos, uniformes, edificios, armas...)",
-        "🖌️ **Describe el diseño o temática deseada**",
-        "📸 **¿Tienes imágenes de referencia?**",
-        "🎯 **¿Cantidad de texturas que necesitas?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🎨 **¿Qué tipo de textura necesitas?** (Vehículos, uniformes, edificios, armas, accesorios...)",
+        "🖌️ **Describe el diseño, colores y temática deseada con el mayor detalle posible**",
+        "📸 **¿Tienes imágenes de referencia, concept art o ejemplos visuales?**",
+        "🔢 **¿Cuántas texturas necesitas en total y para qué modelos?**",
+        "📐 **¿Qué resolución prefieres?** (16×16, 32×32, 64×64 — o déjalo a nuestra recomendación)",
+        "🎨 **¿Necesitas variantes de color o diseño?** (Ej: varias unidades con distintos colores)",
+        "🏷️ **¿Para qué servidor, facción o comunidad de ER:LC es?**",
+        "📁 **¿Tienes referencias de texturas que te gusten para inspirarnos?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Mapas personalizados ER:LC": [
-        "🗺️ **¿Qué tipo de mapa?** (Roleplay, carrera, drifting, persecución...)",
-        "📐 **¿Tamaño aproximado del mapa?**",
-        "🏗️ **¿Edificios o estructuras específicas?**",
-        "🌆 **¿Temática o ambientación deseada?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🗺️ **¿Qué tipo de mapa deseas?** (Base, ciudad, comisaría, hospital, estación, aeropuerto...)",
+        "📐 **Describe el tamaño y dimensiones aproximadas que imaginas**",
+        "🏗️ **¿Qué edificios, estructuras o zonas específicas debe incluir?**",
+        "🌆 **¿Cuál es la temática o ambientación?** (Moderno, rural, industrial, playa, montaña...)",
+        "📍 **¿Necesitas zonas de spawn, garajes, helipuertos o puntos de interés?**",
+        "📸 **¿Tienes referencias visuales, planos dibujados o ideas concretas?**",
+        "🏷️ **¿Para qué servidor o comunidad de ER:LC va dirigido?**",
+        "🏠 **¿Necesitas decoración interior detallada o solo la estructura exterior?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Servicios de Discord": [
-        "🛡️ **¿Qué servicio necesitas?** (Configuración del servidor, moderación, roles, bots...)",
-        "📋 **Describe lo que quieres implementar**",
-        "👥 **¿Cuántos miembros tiene el servidor?**",
-        "🔧 **¿Tienes algún bot o herramienta ya instalada?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🛡️ **¿Qué necesitas específicamente?** (Configuración, moderación, diseño visual, bots...)",
+        "📋 **Describe tu servidor: temática, miembros actuales y cuántos esperas tener**",
+        "🔧 **¿Tienes roles y canales ya creados o empiezas desde cero?**",
+        "🤖 **¿Qué bots utilizas actualmente en tu servidor (si tienes alguno)?**",
+        "🎫 **¿Necesitas sistema de tickets, bienvenidas, logs de auditoría o niveles?**",
+        "🎨 **¿Quieres diseño visual personalizado?** (Iconos, banners, emojis, colores...)",
+        "📊 **¿Necesitas panel de administración web para el servidor?**",
+        "📁 **¿Tienes ejemplos de servidores que te gusten como referencia?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Redacción de documentos ER:LC": [
-        "📝 **¿Qué tipo de documento necesitas?** (Reglas, lore, sanciones, rangos...)",
-        "📄 **¿Tienes algún borrador o base?**",
-        "🎯 **¿Extensión aproximada?** (Páginas o palabras)",
-        "🏷️ **¿Temática o estilo del documento?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "📝 **¿Qué tipo de documento necesitas?** (Reglamento, manual de facción, lore, sanciones, rangos...)",
+        "📋 **Describe el contenido, alcance y propósito del documento**",
+        "📄 **¿Tienes algún borrador, base escrita o ejemplo de documento similar?**",
+        "📏 **¿Qué extensión aproximada debe tener?** (Número de páginas o secciones)",
+        "🏷️ **¿Cuál es la temática o ambientación de tu servidor de ER:LC?**",
+        "📎 **¿Necesitas un formato específico?** (Google Docs, PDF, embed de Discord...)",
+        "👥 **¿El documento es para una facción específica o para todo el servidor?**",
+        "🖼️ **¿Necesitas incluir imágenes, tablas o diagramas?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Diseño gráfico": [
-        "🎨 **¿Qué tipo de diseño?** (Logo, banner, portada, thumbnail, empaque...)",
-        "🖼️ **¿Tienes referencias visuales?**",
-        "🌈 **¿Colores o paleta deseada?**",
-        "📐 **¿Tamaño o formato específico?**",
-        "⏰ **¿Cuál es tu plazo límite?**",
-        "💳 **¿Cuál es tu método de pago preferido?**",
+        "🎨 **¿Qué tipo de diseño necesitas?** (Logo, banner, thumbnail, portada, empaque, flyer...)",
+        "🖌️ **Describe el estilo visual que buscas** (Moderno, minimalista, llamativo, elegante...)",
+        "🖼️ **¿Tienes referencias visuales o ejemplos de diseños que te gusten?**",
+        "🌈 **¿Qué colores o paleta deseas?** (O prefieres darnos libertad creativa)",
+        "📱 **¿Para qué plataforma o uso será?** (Discord, YouTube, web, impresión, redes...)",
+        "💾 **¿Necesitas el archivo editable (PSD, AI) además del PNG/JPG final?**",
+        "📝 **¿Tienes texto, slogan o información específica que debe incluir?**",
+        "🔄 **¿Necesitas varias versiones o variantes del mismo diseño?**",
+        "⏰ **¿Cuentas con algún plazo límite o fecha de entrega deseada?**",
+        "💳 **¿Cuál es tu método de pago preferido?** (PayPal, Crypto, Transferencia...)",
     ],
     "Alianza": [
         "🤝 **¿De qué trata tu servidor o comunidad?**",
@@ -679,6 +754,8 @@ SERVICE_QUESTIONS = {
         "🌐 **¿Tienes servidor de Discord o redes sociales?**",
         "📢 **¿Cómo podemos promocionar tu comunidad?**",
         "🔄 **¿Qué beneficios ofreces a cambio?**",
+        "📊 **¿Cuánta actividad tiene tu comunidad?** (Mensajes/día, eventos frecuentes...)",
+        "⏰ **¿Cuándo te gustaría empezar la alianza?**",
     ],
 }
 
@@ -826,7 +903,82 @@ class Tickets(commands.Cog):
             except Exception:
                 pass
 
-    @app_commands.command(name="pedido", description="Solicita un servicio y crea un ticket")
+    @app_commands.command(name="setup-welcome", description="Envía el embed de bienvenida al canal de bienvenida")
+    @app_commands.default_permissions(administrator=True)
+    async def setup_welcome(self, interaction: discord.Interaction):
+        try:
+            channel = interaction.guild.get_channel(1525894271314690129) if interaction.guild else None
+            if not channel:
+                await interaction.response.send_message("❌ Canal de bienvenida no encontrado.", ephemeral=True)
+                return
+
+            embed = discord.Embed(
+                title="",
+                color=0x3b82f6
+            )
+            embed.set_author(
+                name="⚡ ZentroxDev — Ideas que construyen soluciones",
+                icon_url=interaction.guild.icon.url if interaction.guild.icon else None
+            )
+            embed.description = (
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                "Bienvenido a **ZentroxDev**, tu aliado en desarrollo digital.\n"
+                "Convertimos tus ideas en soluciones reales: bots, páginas web,\n"
+                "diseño gráfico, texturas, mapas y más — **todo a tu medida**.\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            )
+
+            embed.add_field(
+                name="🤖 **¿Qué ofrecemos?**",
+                value=(
+                    "`▸` **Bots personalizados** — Discord, Telegram, Minecraft\n"
+                    "`▸` **Páginas web** — Landing pages, tiendas, paneles, sistemas\n"
+                    "`▸` **Texturas ER:LC** — Profesionales, rápidas, calidad máxima\n"
+                    "`▸` **Mapas ER:LC** — Bases, ciudades, comisarías y más\n"
+                    "`▸` **Diseño gráfico** — Logos, banners, thumbnails, branding\n"
+                    "`▸` **Documentos ER:LC** — Reglamentos, lore, manuales\n"
+                    "`▸` **Servicios Discord** — Configuración, moderación, bots"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="📌 **¿Cómo empezar?**",
+                value=(
+                    "**1.** Explora nuestros servicios en los canales de la categoría **🛒 SERVICIOS**\n"
+                    "**2.** Dirígete a **✉️ TICKETS > #crear-ticket** y selecciona tu servicio\n"
+                    "**3.** Responde las preguntas y un miembro del equipo te contactará"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="💬 **Comunidad**",
+                value=(
+                    "📢 Mantente al día con nuestros `#anuncios`\n"
+                    "💬 Únete a la conversación en `#general`\n"
+                    "⭐ Deja tu reseña en `#reseñas` después de tu compra"
+                ),
+                inline=False
+            )
+
+            embed.set_image(url="https://placehold.co/1200x400/0d1117/3b82f6?text=Bienvenido+a+ZentroxDev&font=montserrat")
+            embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
+            embed.set_footer(
+                text="ZentroxDev © 2026 · Sin plantillas, sin límites",
+                icon_url=interaction.guild.icon.url if interaction.guild.icon else None
+            )
+            embed.timestamp = discord.utils.utcnow()
+
+            await channel.send(embed=embed)
+            await interaction.response.send_message(f"✅ Welcome embed enviado a {channel.mention}", ephemeral=True)
+
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
     async def pedido(self, interaction: discord.Interaction):
         try:
             await interaction.response.send_modal(PedidoModal(self.bot))
