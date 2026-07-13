@@ -943,14 +943,21 @@ class Tickets(commands.Cog):
         self.bot = bot
 
     def _validar_respuesta(self, content):
-        import re
         content = content.strip()
         if not content:
             return False, "La respuesta no puede estar vacia."
         if len(content) > 1000:
             return False, "La respuesta es muy larga. Maximo 1000 caracteres."
-        if re.match(r'^(.)\1{6,}$', content) or len(set(content.lower())) <= 1:
-            return False, "Por favor, escribe una respuesta valida."
+        for word in content.split():
+            w = word.lower()
+            if len(w) > 3 and not any(v in w for v in 'aeiouáéíóú'):
+                return False, "Esa respuesta no parece valida. Por favor, escribe con sentido."
+            if len(w) > 4:
+                counts = {}
+                for ch in w:
+                    counts[ch] = counts.get(ch, 0) + 1
+                if max(counts.values()) > len(w) * 0.6:
+                    return False, "Esa respuesta no parece valida. Por favor, escribe con sentido."
         return True, ""
 
     async def _run_questionnaire(self, channel, member, service_name):
