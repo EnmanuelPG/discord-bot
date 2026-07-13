@@ -30,6 +30,11 @@ class Welcome(commands.Cog):
         if not channel:
             return
 
+        recent = [msg async for msg in channel.history(limit=5)]
+        for msg in recent:
+            if msg.author == self.bot.user and str(member.id) in msg.content:
+                return
+
         ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
 
         embed = discord.Embed(
