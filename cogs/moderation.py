@@ -88,8 +88,9 @@ class Moderation(commands.Cog):
         )
 
     @app_commands.command(name="setup-moderation", description="Crea la categoria y canales de moderacion")
-    @app_commands.default_permissions(administrator=True)
     async def setup_moderation(self, interaction: discord.Interaction):
+        if interaction.user.id != 1257780268719411260:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         if not interaction.guild:
             return await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
         await interaction.response.defer(ephemeral=True)

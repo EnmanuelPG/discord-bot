@@ -1116,8 +1116,9 @@ class Tickets(commands.Cog):
                 await self._protect_bot_role(guild)
 
     @app_commands.command(name="panel", description="Envía el panel de tickets al canal configurado")
-    @app_commands.default_permissions(administrator=True)
     async def panel(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         try:
             channel = interaction.guild.get_channel(TICKET_PANEL_CHANNEL_ID) if interaction.guild else None
             if not channel:
@@ -1135,8 +1136,9 @@ class Tickets(commands.Cog):
                 pass
 
     @app_commands.command(name="setup-embeds", description="Envía embeds de servicios a todos los canales de servicio")
-    @app_commands.default_permissions(administrator=True)
     async def setup_embeds(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         if not interaction.guild:
             await interaction.response.send_message("❌ Solo en servidores.", ephemeral=True)
             return
@@ -1156,8 +1158,9 @@ class Tickets(commands.Cog):
         await interaction.followup.send(f"✅ Embeds enviados a **{enviados}/{len(SERVICE_EMBEDS)}** canales.", ephemeral=True)
 
     @app_commands.command(name="setup-welcome", description="Envía el embed de bienvenida al canal de bienvenida")
-    @app_commands.default_permissions(administrator=True)
     async def setup_welcome(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         try:
             channel = interaction.guild.get_channel(1525894271314690129) if interaction.guild else None
             if not channel:
@@ -1245,6 +1248,8 @@ class Tickets(commands.Cog):
 
     @app_commands.command(name="setup-pedidos", description="Renombra el canal de pedidos y le pone topic")
     async def setup_pedidos(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         channel = interaction.guild.get_channel(PEDIDOS_CHANNEL_ID) if interaction.guild else None
         if not channel:
             return await interaction.response.send_message("❌ Canal de pedidos no encontrado.", ephemeral=True)
@@ -1256,6 +1261,8 @@ class Tickets(commands.Cog):
 
     @app_commands.command(name="setup-ticket-log", description="Configura el canal para logs de tickets")
     async def setup_ticket_log(self, interaction: discord.Interaction):
+        if interaction.user.id != CREATOR_ID:
+            return await interaction.response.send_message("❌ Solo el creador del bot puede usar este comando.", ephemeral=True)
         global TICKET_LOG_CHANNEL_ID
         TICKET_LOG_CHANNEL_ID = interaction.channel_id
         _save_ticket_config()
