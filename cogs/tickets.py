@@ -381,54 +381,58 @@ async def create_ticket_channel(guild, ticket_id, embed, username, category_id=N
 async def send_embed_to_pedidos(guild, bot_user, ticket_id, service_name, detalle, metodo, usuario, ticket_channel):
     pedidos_channel = guild.get_channel(PEDIDOS_CHANNEL_ID)
     if not pedidos_channel:
-        print("Canal de pedidos no encontrado")
+        print(f"Canal de pedidos ({PEDIDOS_CHANNEL_ID}) no encontrado en {guild.name}")
         return
 
-    embed = discord.Embed(
-        title="✨ Nuevo pedido recibido",
-        description=(
-            f"📦 **{service_name}**\n\n"
-            f"🎯 Bienvenido y gracias por confiar en **ZentroxDev**.\n"
-            f"Hemos recibido tu solicitud y uno de nuestros administradores "
-            f"la revisará en breve."
-        ),
-        color=0x3b82f6,
-        timestamp=discord.utils.utcnow()
-    )
+    try:
+        embed = discord.Embed(
+            title="✨ Nuevo pedido recibido",
+            description=(
+                f"📦 **{service_name}**\n\n"
+                f"🎯 Bienvenido y gracias por confiar en **ZentroxDev**.\n"
+                f"Hemos recibido tu solicitud y uno de nuestros administradores "
+                f"la revisará en breve."
+            ),
+            color=0x3b82f6,
+            timestamp=discord.utils.utcnow()
+        )
 
-    info = (
-        f"**Ticket:** {ticket_id}\n"
-        f"**Servicio:** {service_name}\n"
-        f"━━━━━━━━━━━━━━━━━━━\n"
-        f"**Detalle:**\n{detalle}\n\n"
-        f"**Pago:** {metodo}\n"
-        f"**Discord:** {usuario}"
-    )
-    embed.add_field(name="📋 Información del pedido", value=info, inline=False)
+        info = (
+            f"**Ticket:** {ticket_id}\n"
+            f"**Servicio:** {service_name}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"**Detalle:**\n{detalle}\n\n"
+            f"**Pago:** {metodo}\n"
+            f"**Discord:** {usuario}"
+        )
+        embed.add_field(name="📋 Información del pedido", value=info, inline=False)
 
-    pasos = (
-        "▸ Un miembro del equipo revisará tu solicitud.\n"
-        "▸ Recibirás una respuesta por Discord en máximo 24 horas hábiles.\n"
-        "▸ Es posible que te solicitemos información adicional.\n"
-        "▸ No cierres este ticket hasta que tu pedido esté finalizado."
-    )
-    embed.add_field(name="📌 Próximos pasos", value=pasos, inline=False)
+        pasos = (
+            "▸ Un miembro del equipo revisará tu solicitud.\n"
+            "▸ Recibirás una respuesta por Discord en máximo 24 horas hábiles.\n"
+            "▸ Es posible que te solicitemos información adicional.\n"
+            "▸ No cierres este ticket hasta que tu pedido esté finalizado."
+        )
+        embed.add_field(name="📌 Próximos pasos", value=pasos, inline=False)
 
-    gracias = (
-        "💙 **Gracias por tu preferencia**\n"
-        "*\"Ideas que construyen soluciones\"*\n\n"
-        "El equipo de ZentroxDev se pondrá en contacto contigo pronto. "
-        "Si tienes alguna urgencia, responde a este mensaje."
-    )
-    embed.add_field(name="\u200b", value=gracias, inline=False)
+        gracias = (
+            "💙 **Gracias por tu preferencia**\n"
+            "*\"Ideas que construyen soluciones\"*\n\n"
+            "El equipo de ZentroxDev se pondrá en contacto contigo pronto. "
+            "Si tienes alguna urgencia, responde a este mensaje."
+        )
+        embed.add_field(name="\u200b", value=gracias, inline=False)
 
-    embed.set_footer(
-        text="ZentroxDev © 2026 · Los administradores te contactarán pronto",
-        icon_url=bot_user.display_avatar.url if bot_user else None
-    )
+        embed.set_footer(
+            text="ZentroxDev © 2026 · Los administradores te contactarán pronto",
+            icon_url=bot_user.display_avatar.url if bot_user else None
+        )
 
-    await pedidos_channel.send(embed=embed)
-    await pedidos_channel.send(f"📌 **Canal del ticket:** {ticket_channel.mention}")
+        msg = await pedidos_channel.send(embed=embed)
+        await pedidos_channel.send(f"📌 **Canal del ticket:** {ticket_channel.mention}")
+        print(f"[PEDIDOS] Enviado {ticket_id} ({service_name}) — msg {msg.id}")
+    except Exception as e:
+        print(f"[PEDIDOS] Error al enviar {ticket_id}: {e}")
 
 
 PANEL_EMBED = discord.Embed(
@@ -704,14 +708,20 @@ class TicketPanelView(discord.ui.View):
         self.cog = cog
 
     async def _ejecutar(self, interaction, nombre):
-        if self.cog:
-            await self.cog._create_ticket(interaction, nombre)
-        else:
-            cog = interaction.client.get_cog("Tickets")
+        try:
+            cog = self.cog or interaction.client.get_cog("Tickets")
             if cog:
                 await cog._create_ticket(interaction, nombre)
             else:
                 await interaction.response.send_message("❌ Error interno: cog no disponible", ephemeral=True)
+        except Exception as e:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            except Exception:
+                pass
 
     @discord.ui.button(label="🤖 Bots Personalizados", style=discord.ButtonStyle.primary, custom_id="panel_bots", row=0)
     async def btn_bots(self, interaction: discord.Interaction, button: discord.ui.Button):
