@@ -1,28 +1,42 @@
 import discord
+import time
 from discord.ext import commands
 
 WELCOME_CHANNEL_ID = 1525894271314690129
+TICKET_CHANNEL_ID = 1525894274250707058
+DEDUP_SECONDS = 30
 
 
 class Welcome(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._recent_joins = {}
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member.guild.id != 1525894268651176159:
             return
 
+        now = time.time()
+        last = self._recent_joins.get(member.id, 0)
+        if now - last < DEDUP_SECONDS:
+            return
+        self._recent_joins[member.id] = now
+
         channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
         if not channel:
             return
+
+        ticket_ch = member.guild.get_channel(TICKET_CHANNEL_ID)
 
         embed = discord.Embed(
             title=f"🚀 ¡Bienvenido a ZentroxDev, {member.display_name}!",
             description=(
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                "Nos alegra tenerte aquí. **ZentroxDev** es un estudio de desarrollo\n"
-                "digital especializado en crear soluciones **a tu medida**.\n"
+                "Somos un estudio de desarrollo con experiencia en proyectos\n"
+                "para servidores, comunidades y creadores de contenido.\n"
+                "Cada trabajo lo tratamos con seriedad, desde el primer\n"
+                "boceto hasta la entrega final.\n"
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             ),
             color=0x3b82f6
@@ -51,8 +65,9 @@ class Welcome(commands.Cog):
         embed.add_field(
             name="📌 **¿Cómo contratar?**",
             value=(
-                "Dirígete a **✉️ TICKETS > #crear-ticket**, elige tu servicio\n"
-                "y responde el cuestionario. Te responderemos lo antes posible."
+                f"Dirígete a {ticket_ch.mention if ticket_ch else '**TICKETS**'}, "
+                "elige el servicio que necesitas\n"
+                "y responde el cuestionario. Te atenderemos a la brevedad."
             ),
             inline=False
         )
@@ -69,10 +84,10 @@ class Welcome(commands.Cog):
             dm = discord.Embed(
                 title="👋 ¡Gracias por unirte a ZentroxDev!",
                 description=(
-                    "Somos un equipo de desarrollo apasionado por crear\n"
-                    "soluciones digitales **desde cero**, sin plantillas.\n\n"
+                    "Somos un equipo que desarrolla soluciones digitales\n"
+                    "**desde cero**, sin plantillas ni atajos.\n\n"
                     "**🛒 ¿Necesitas algo?**\n"
-                    "Ve a nuestro servidor y abre un ticket en **#crear-ticket**\n\n"
+                    f"Ve a {ticket_ch.mention if ticket_ch else 'TICKETS'} y abre un ticket\n\n"
                     "**💬 ¿Dudas?**\n"
                     "Pregunta en **#general** o **#chats**\n\n"
                     "¡Esperamos trabajar contigo! 🚀"
@@ -80,7 +95,7 @@ class Welcome(commands.Cog):
                 color=0x3b82f6
             )
             dm.set_thumbnail(url=member.guild.icon.url if member.guild.icon else None)
-            dm.set_footer(text="ZentroxDev © 2026")
+            dm.set_footer(text="ZentroxDev © 2026 · Desarrollo profesional desde cero")
             await member.send(embed=dm)
         except discord.Forbidden:
             pass
