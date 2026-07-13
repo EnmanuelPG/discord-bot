@@ -20,6 +20,23 @@ ALLOWED_GUILDS = {1525894268651176159}
 MAX_TICKETS_PER_DAY = 3
 _user_daily_tickets = {}
 
+SERVICE_PRICES = {
+    "Bots Personalizados": {"rango": "$10 — $100 USD", "monthy": "$15/mes"},
+    "Páginas Web": {"rango": "$15 — $120 USD", "monthy": "$15/mes"},
+    "Texturas de ER:LC": {"rango": "$3 — $30 USD", "monthy": None},
+    "Mapas personalizados ER:LC": {"rango": "$15 — $120 USD", "monthy": None},
+    "Servicios de Discord": {"rango": "$10 — $50 USD", "monthy": "$15/mes"},
+    "Redacción de documentos ER:LC": {"rango": "$5 — $30 USD", "monthy": None},
+    "Diseño gráfico": {"rango": "$3 — $50 USD", "monthy": None},
+    "Alianza": {"rango": None, "monthy": None},
+}
+
+MAINTENANCE_PLANS = {
+    "Básico ($5/mes)": "Hosting + monitoreo + backups semanales",
+    "Estándar ($15/mes)": "Todo lo anterior + bugs + cambios menores + soporte prioritario",
+    "Premium ($30/mes)": "Todo + hosting dedicado + cambios ilimitados + 1 feature/mes + backups diarios",
+}
+
 
 def check_daily_limit(user_id: int) -> tuple[bool, int]:
     today = date.today()
@@ -531,6 +548,7 @@ class TicketPanelView(discord.ui.View):
               "\n".join(f"{q}" for q in questions) + \
               "\n\nUn miembro del equipo te atenderá en breve. 💙"
         await ticket_channel.send(msg)
+        await send_pricing_info(ticket_channel, service_name)
         increment_daily_count(interaction.user.id)
         await interaction.followup.send(
             f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
@@ -605,6 +623,40 @@ SERVICE_QUESTIONS = {
 }
 
 
+PRICING_EMBED_COLOR = 0x34d399
+
+
+async def send_pricing_info(channel, service_name: str):
+    prices = SERVICE_PRICES.get(service_name)
+    if not prices or prices["rango"] is None:
+        return
+
+    embed = discord.Embed(
+        title="💰 Información de Precios",
+        description=f"Servicio seleccionado: **{service_name}**",
+        color=PRICING_EMBED_COLOR
+    )
+    embed.add_field(name="Precio estimado", value=prices["rango"], inline=False)
+
+    if prices["monthy"]:
+        embed.add_field(
+            name="🔄 Mantenimiento mensual",
+            value=f"Desde {prices['monthy']} — incluye hosting 24/7, soporte y actualizaciones.\n"
+                  "Pregunta a nuestro staff por los detalles.",
+            inline=False
+        )
+
+    plans = "\n".join(f"**{k}** — {v}" for k, v in MAINTENANCE_PLANS.items())
+    embed.add_field(
+        name="📋 Planes de mantenimiento",
+        value=plans,
+        inline=False
+    )
+    embed.set_footer(text="ZentroxDev · Precios referenciales, pueden variar según el proyecto")
+
+    await channel.send(embed=embed)
+
+
 class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
     servicio = discord.ui.TextInput(
         label="¿Qué servicio necesitas?",
@@ -655,6 +707,7 @@ class PedidoModal(discord.ui.Modal, title="📦 Nuevo Pedido — ZentroxDev"):
             ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, username, category_id=WEB_CATEGORY_ID)
             if created:
                 increment_daily_count(interaction.user.id)
+                await send_pricing_info(ticket_channel, self.servicio.value)
                 await send_embed_to_pedidos(guild, self.bot.user, ticket_id, self.servicio.value, detalle_completo, self.pago.value, username, ticket_channel)
             await interaction.followup.send(
                 f"✅ **Ticket {ticket_id} creado** → {ticket_channel.mention}",
