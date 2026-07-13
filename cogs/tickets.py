@@ -474,224 +474,51 @@ PANEL_EMBED.set_footer(text="ZentroxDev © 2026 · Calidad y compromiso")
 
 
 class TicketPanelView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, cog=None):
         super().__init__(timeout=None)
+        self.cog = cog
+
+    async def _ejecutar(self, interaction, nombre):
+        if self.cog:
+            await self.cog._create_ticket(interaction, nombre)
+        else:
+            cog = interaction.client.get_cog("Tickets")
+            if cog:
+                await cog._create_ticket(interaction, nombre)
+            else:
+                await interaction.response.send_message("❌ Error interno: cog no disponible", ephemeral=True)
 
     @discord.ui.button(label="🤖 Bots Personalizados", style=discord.ButtonStyle.primary, custom_id="panel_bots", row=0)
     async def btn_bots(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Bots Personalizados")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Bots Personalizados")
 
     @discord.ui.button(label="🌐 Páginas Web", style=discord.ButtonStyle.primary, custom_id="panel_web", row=0)
     async def btn_web(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Páginas Web")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Páginas Web")
 
     @discord.ui.button(label="🪄 Texturas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_texturas", row=1)
     async def btn_texturas(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Texturas de ER:LC")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Texturas de ER:LC")
 
     @discord.ui.button(label="🗺️ Mapas ER:LC", style=discord.ButtonStyle.success, custom_id="panel_mapas", row=1)
     async def btn_mapas(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Mapas personalizados ER:LC")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Mapas personalizados ER:LC")
 
     @discord.ui.button(label="🛠️ Servicios Discord", style=discord.ButtonStyle.secondary, custom_id="panel_discord", row=2)
     async def btn_discord(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Servicios de Discord")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Servicios de Discord")
 
     @discord.ui.button(label="🤝 Alianza", style=discord.ButtonStyle.secondary, custom_id="panel_alianza", row=2)
     async def btn_alianza(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Alianza")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Alianza")
 
     @discord.ui.button(label="📝 Documentos ER:LC", style=discord.ButtonStyle.secondary, custom_id="panel_documentos", row=3)
     async def btn_documentos(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Redacción de documentos ER:LC")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
+        await self._ejecutar(interaction, "Redacción de documentos ER:LC")
 
     @discord.ui.button(label="🎨 Diseño Gráfico", style=discord.ButtonStyle.danger, custom_id="panel_diseno", row=3)
     async def btn_diseno(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self._create_ticket(interaction, "Diseño gráfico")
-        except Exception as e:
-            try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
-            except Exception:
-                pass
-
-    def _validar_respuesta(self, content):
-        import re
-        content = content.strip()
-        if not content or len(content) < 3:
-            return False, "La respuesta debe tener al menos 3 caracteres."
-        if len(content) > 1000:
-            return False, "La respuesta es muy larga. Maximo 1000 caracteres."
-        if re.match(r'^(.)\1{4,}$', content) or len(set(content.lower())) <= 2:
-            return False, "Por favor, escribe una respuesta valida."
-        return True, ""
-
-    async def _run_questionnaire(self, channel, member, service_name):
-        questions = SERVICE_QUESTIONS.get(service_name, [])
-        if not questions:
-            return []
-
-        answers = []
-        intro = (
-            f"📋 **Cuestionario interactivo — {service_name}**\n\n"
-            f"Te haré **{len(questions)} preguntas** para entender mejor tu proyecto. "
-            f"Responde una por una en este canal.\n"
-            f"⏰ Tienes **10 minutos** por respuesta.\n\n"
-            f"*Comenzamos en unos segundos...*"
-        )
-        await channel.send(intro)
-        await asyncio.sleep(2)
-
-        for i, question in enumerate(questions):
-            await channel.send(f"**❓ Pregunta {i+1}/{len(questions)}**\n{question}")
-
-            def check(m):
-                return m.channel == channel and m.author == member and not m.author.bot
-
-            while True:
-                try:
-                    msg = await self.bot.wait_for('message', timeout=600.0, check=check)
-                except asyncio.TimeoutError:
-                    await channel.send(
-                        "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
-                        "tus respuestas en el canal y un miembro del equipo las revisará."
-                    )
-                    return []
-
-                content = msg.content.strip()
-                valid, reason = self._validar_respuesta(content)
-                if valid:
-                    answers.append(content)
-                    try:
-                        await msg.add_reaction('✅')
-                    except Exception:
-                        pass
-                    break
-                else:
-                    try:
-                        await msg.add_reaction('❌')
-                        await channel.send(f"{reason} Responde nuevamente.")
-                    except Exception:
-                        pass
- 
-        done = discord.Embed(
-            title="Cuestionario completado",
-            description=(
-                f"Todas las respuestas han sido registradas correctamente.\n\n"
-                f"En breve un miembro del equipo revisara tu solicitud "
-                f"y te atendra en este canal.\n"
-                f"Mientras tanto, si necesitas agregar algo mas, "
-                f"puedes escribirlo aquí."
-            ),
-            color=0x2c3e50,
-        )
-        done.set_footer(text="ZentroxDev © 2026")
-        await channel.send(embed=done)
-        return answers
-
-    async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
-        guild = interaction.guild
-        if not guild:
-            await interaction.response.send_message("❌ Esto solo funciona en un servidor.", ephemeral=True)
-            return
-        allowed, used = check_daily_limit(interaction.user.id)
-        if not allowed:
-            await interaction.response.send_message(
-                f"❌ Ya has usado tus **{MAX_TICKETS_PER_DAY} tickets** hoy. Vuelve mañana.", ephemeral=True
-            )
-            return
-        await interaction.response.defer(ephemeral=True)
-        ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
-        dummy_embed = discord.Embed(title=f"📦 {service_name}")
-        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name, category_id=PANEL_CATEGORY_ID)
-        if not created:
-            await interaction.followup.send(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
-            return
-        await send_pricing_info(ticket_channel, service_name)
-        increment_daily_count(interaction.user.id)
-        await interaction.followup.send(
-            f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
-            ephemeral=True
-        )
-        answers = await self._run_questionnaire(ticket_channel, interaction.user, service_name)
-        if answers:
-            questions = SERVICE_QUESTIONS.get(service_name, [])
-            lines = []
-            for i, (q, a) in enumerate(zip(questions, answers)):
-                clean = q.replace('**', '')
-                if ' ' in clean:
-                    clean = clean.split(' ', 1)[1] if len(clean.split(' ', 1)) > 1 else clean
-                lines.append(f"**Pregunta {i+1}:** {clean}\n**R:** {a}")
-            detalle = "\n\n".join(lines)
-            metodo = answers[-1] if answers else "No especificado"
-            print(f"[TICKET] Enviando a pedidos: {ticket_id} ({service_name})", flush=True)
-            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
+        await self._ejecutar(interaction, "Diseño gráfico")
 
 SERVICE_QUESTIONS = {
     "Bots Personalizados": [
@@ -890,6 +717,118 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def _validar_respuesta(self, content):
+        import re
+        content = content.strip()
+        if not content or len(content) < 3:
+            return False, "La respuesta debe tener al menos 3 caracteres."
+        if len(content) > 1000:
+            return False, "La respuesta es muy larga. Maximo 1000 caracteres."
+        if re.match(r'^(.)\1{4,}$', content) or len(set(content.lower())) <= 2:
+            return False, "Por favor, escribe una respuesta valida."
+        return True, ""
+
+    async def _run_questionnaire(self, channel, member, service_name):
+        questions = SERVICE_QUESTIONS.get(service_name, [])
+        if not questions:
+            return []
+
+        answers = []
+        intro = (
+            f"📋 **Cuestionario interactivo — {service_name}**\n\n"
+            f"Te haré **{len(questions)} preguntas** para entender mejor tu proyecto. "
+            f"Responde una por una en este canal.\n"
+            f"⏰ Tienes **10 minutos** por respuesta.\n\n"
+            f"*Comenzamos en unos segundos...*"
+        )
+        await channel.send(intro)
+        await asyncio.sleep(2)
+
+        for i, question in enumerate(questions):
+            await channel.send(f"**❓ Pregunta {i+1}/{len(questions)}**\n{question}")
+
+            def check(m):
+                return m.channel == channel and m.author == member and not m.author.bot
+
+            while True:
+                try:
+                    msg = await self.bot.wait_for('message', timeout=600.0, check=check)
+                except asyncio.TimeoutError:
+                    await channel.send(
+                        "⏰ **Tiempo agotado.** No te preocupes, puedes seguir escribiendo "
+                        "tus respuestas en el canal y un miembro del equipo las revisará."
+                    )
+                    return []
+
+                content = msg.content.strip()
+                valid, reason = self._validar_respuesta(content)
+                if valid:
+                    answers.append(content)
+                    try:
+                        await msg.add_reaction('✅')
+                    except Exception:
+                        pass
+                    break
+                else:
+                    try:
+                        await msg.add_reaction('❌')
+                        await channel.send(f"{reason} Responde nuevamente.")
+                    except Exception:
+                        pass
+
+        done = discord.Embed(
+            title="Cuestionario completado",
+            description=(
+                f"Todas las respuestas han sido registradas correctamente.\n\n"
+                f"En breve un miembro del equipo revisara tu solicitud "
+                f"y te atendra en este canal.\n"
+                f"Mientras tanto, si necesitas agregar algo mas, "
+                f"puedes escribirlo aquí."
+            ),
+            color=0x2c3e50,
+        )
+        done.set_footer(text="ZentroxDev © 2026")
+        await channel.send(embed=done)
+        return answers
+
+    async def _create_ticket(self, interaction: discord.Interaction, service_name: str):
+        guild = interaction.guild
+        if not guild:
+            await interaction.response.send_message("❌ Esto solo funciona en un servidor.", ephemeral=True)
+            return
+        allowed, used = check_daily_limit(interaction.user.id)
+        if not allowed:
+            await interaction.response.send_message(
+                f"❌ Ya has usado tus **{MAX_TICKETS_PER_DAY} tickets** hoy. Vuelve mañana.", ephemeral=True
+            )
+            return
+        await interaction.response.defer(ephemeral=True)
+        ticket_id = f"ZTX-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        dummy_embed = discord.Embed(title=f"📦 {service_name}")
+        ticket_channel, created = await create_ticket_channel(guild, ticket_id, dummy_embed, interaction.user.name, category_id=PANEL_CATEGORY_ID)
+        if not created:
+            await interaction.followup.send(f"⚠️ Ya existe un ticket: {ticket_channel.mention}", ephemeral=True)
+            return
+        await send_pricing_info(ticket_channel, service_name)
+        increment_daily_count(interaction.user.id)
+        await interaction.followup.send(
+            f"✅ **Ticket {ticket_id}** creado → {ticket_channel.mention}",
+            ephemeral=True
+        )
+        answers = await self._run_questionnaire(ticket_channel, interaction.user, service_name)
+        if answers:
+            questions = SERVICE_QUESTIONS.get(service_name, [])
+            lines = []
+            for i, (q, a) in enumerate(zip(questions, answers)):
+                clean = q.replace('**', '')
+                if ' ' in clean:
+                    clean = clean.split(' ', 1)[1] if len(clean.split(' ', 1)) > 1 else clean
+                lines.append(f"**Pregunta {i+1}:** {clean}\n**R:** {a}")
+            detalle = "\n\n".join(lines)
+            metodo = answers[-1] if answers else "No especificado"
+            print(f"[TICKET] Enviando a pedidos: {ticket_id} ({service_name})", flush=True)
+            await send_embed_to_pedidos(guild, self.bot.user, ticket_id, service_name, detalle, metodo, interaction.user.name, ticket_channel)
+
     async def _protect_bot_role(self, guild: discord.Guild):
         """Mueve el rol del bot al tope de la jerarquía para evitar que admins lo expulsen."""
         bot_member = guild.me
@@ -923,7 +862,7 @@ class Tickets(commands.Cog):
             if not channel:
                 await interaction.response.send_message("❌ Canal de panel no encontrado.", ephemeral=True)
                 return
-            await channel.send(embed=PANEL_EMBED, view=TicketPanelView())
+            await channel.send(embed=PANEL_EMBED, view=TicketPanelView(cog=self))
             await interaction.response.send_message(f"✅ Panel enviado a {channel.mention}", ephemeral=True)
         except Exception as e:
             try:
